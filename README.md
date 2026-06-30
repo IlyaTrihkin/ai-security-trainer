@@ -21,3 +21,24 @@ git clone https://github.com/IlyaTrihkin/ai-security-trainer.git
 cd ai-security-trainer
 docker compose up -d
 ```
+
+---
+
+## 👤 Автор
+
+Илья Тришкин — специалист по информационной безопасности.
+
+#### GitHub: 
+https://github.com/IlyaTrihkin
+
+#### TenChat: 
+https://tenchat.ru/ilya_trishkin
+
+#### Habr: 
+https://habr.com/ru/users/ilya_trishkin
+
+---
+
+## 📄 Лицензия
+
+Этот проект распространяется под лицензией MIT. Подробнее см. [LICENSE](LICENSE).
