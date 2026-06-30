@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title">Профиль</h4>
+                <p><strong>Имя:</strong> {{ user.username }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Уровень:</strong> {{ user.level }}</p>
+                <p><strong>XP:</strong> {{ user.xp }}</p>
+                <p><strong>Streak:</strong> {{ user.streak }} дней</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

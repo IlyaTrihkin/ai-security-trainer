@@ -24,6 +24,7 @@ services:
       DB_NAME: ${DB_NAME:-security_trainer}
       DB_USER: ${DB_USER:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      SECRET_KEY: ${SECRET_KEY:-dev-key-please-change-in-production}
     ports:
       - "5000:5000"
     depends_on:
@@ -31,6 +32,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+      - ./frontend:/app/frontend
 
 volumes:
   pgdata:
