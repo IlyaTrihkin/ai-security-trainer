@@ -7,7 +7,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    avatar = db.Column(db.String(200), nullable=True)  # путь к файлу
+    avatar = db.Column(db.String(200), nullable=True)
     level = db.Column(db.Integer, default=1)
     xp = db.Column(db.Integer, default=0)
     streak = db.Column(db.Integer, default=0)
@@ -32,13 +32,21 @@ class Lesson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     skill_id = db.Column(db.Integer, db.ForeignKey('skill.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text)
-    image_url = db.Column(db.String(200))
-    video_url = db.Column(db.String(200))
+    description = db.Column(db.Text)  # описание урока (краткое)
     order = db.Column(db.Integer, default=0)
-    questions = db.relationship('Question', backref='lesson', lazy=True)
+    topics = db.relationship('Topic', backref='lesson', lazy=True, cascade='all, delete-orphan')
+
+class Topic(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)   # теория по теме
+    image_url = db.Column(db.String(200))
+    question = db.Column(db.JSON, nullable=False)  # {text, options, correct}
+    order = db.Column(db.Integer, default=0)
 
 class Question(db.Model):
+    # Оставляем для обратной совместимости, но в новых уроках не используем
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
     type = db.Column(db.String(20), nullable=False)

@@ -7,7 +7,7 @@
     <h2 style="margin-bottom: 24px;">🏆 Лидерборд</h2>
     <div class="leaderboard-list">
         {% for entry in leaderboard %}
-            <div class="leaderboard-item" {% if entry.username == user.username %}style="border-color: var(--accent); background: rgba(74, 124, 247, 0.05);"{% endif %}>
+            <div class="leaderboard-item {% if entry.username == user.username %}active{% endif %}">
                 <div class="place">
                     {% if entry.place == 1 %}🥇
                     {% elif entry.place == 2 %}🥈
@@ -17,9 +17,7 @@
                 </div>
                 <div class="avatar">
                     {% if entry.avatar %}
-                        <img src="{{ url_for('static', filename='avatars/' + entry.avatar) }}" 
-                             alt="Аватар" 
-                             style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;">
+                        <img src="{{ url_for('static', filename='avatars/' + entry.avatar) }}" alt="Аватар">
                     {% else %}
                         {{ entry.username[:2].upper() }}
                     {% endif %}

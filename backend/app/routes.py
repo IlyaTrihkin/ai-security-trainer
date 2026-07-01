@@ -5,7 +5,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 from . import db
-from .models import User, Skill, Lesson, UserProgress, Question, Achievement
+from .models import User, Skill, Lesson, UserProgress, Question, Achievement, Topic
 from .gamification import check_achievements
 
 bp = Blueprint('main', __name__)
@@ -127,23 +127,26 @@ def skills():
 @login_required
 def lesson(lesson_id):
     lesson = Lesson.query.get_or_404(lesson_id)
-    questions = Question.query.filter_by(lesson_id=lesson_id).order_by(Question.order).all()
-    existing_progress = UserProgress.query.filter_by(
+    topics = Topic.query.filter_by(lesson_id=lesson_id).order_by(Topic.order).all()
+
+    progress = UserProgress.query.filter_by(
         user_id=current_user.id, lesson_id=lesson_id, completed=True
     ).first()
-    if existing_progress:
+    if progress:
         flash('Вы уже прошли этот урок!', 'info')
         return redirect(url_for('main.skills'))
 
     if request.method == 'POST':
         user_answers = {}
-        for q in questions:
-            user_answers[q.id] = request.form.get(f'question_{q.id}')
+        for topic in topics:
+            key = f'topic_{topic.id}'
+            user_answers[topic.id] = request.form.get(key)
+        
         correct_count = 0
         total_points = 0
-        for q in questions:
-            user_ans = user_answers.get(q.id)
-            correct_ans = q.data.get('correct')
+        for topic in topics:
+            user_ans = user_answers.get(topic.id)
+            correct_ans = topic.question.get('correct')
             if user_ans is not None:
                 try:
                     user_ans = int(user_ans)
@@ -151,7 +154,7 @@ def lesson(lesson_id):
                     user_ans = None
             if user_ans == correct_ans:
                 correct_count += 1
-                total_points += q.points
+                total_points += 10
 
         progress = UserProgress(
             user_id=current_user.id,
@@ -178,11 +181,12 @@ def lesson(lesson_id):
             'result.html',
             lesson=lesson,
             correct_count=correct_count,
-            total_questions=len(questions),
+            total_questions=len(topics),
             total_points=total_points,
             user=current_user
         )
-    return render_template('lesson.html', lesson=lesson, questions=questions, user=current_user)
+
+    return render_template('lesson.html', lesson=lesson, topics=topics, user=current_user)
 
 @bp.route('/leaderboard')
 @login_required
@@ -198,3 +202,14 @@ def leaderboard():
             'avatar': u.avatar
         })
     return render_template('leaderboard.html', leaderboard=leaderboard, user=current_user)
+
+@bp.route('/ai/ask', methods=['POST'])
+@login_required
+def ai_ask():
+    data = request.json
+    question = data.get('question', '')
+    context = data.get('context', 'Общий вопрос по ИБ')
+    # Заглушка — позже заменим на реальный вызов YandexGPT
+    return jsonify({
+        'answer': f'🤖 Хороший вопрос! Пока я ещё учусь, но скоро буду отвечать на все вопросы по ИБ. Твой вопрос: "{question}" (контекст: {context})'
+    })

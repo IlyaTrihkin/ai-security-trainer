@@ -75,6 +75,116 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- ===== Чат-виджет (фиксированная позиция) ===== -->
+    <div id="chatContainer">
+        <div id="chatToggle">
+            <span style="font-size: 24px;">🤖</span>
+            <span style="font-weight: 600;">Помощник</span>
+            <span id="chatArrow" style="margin-left: auto; font-size: 12px; color: var(--text-secondary);">▼</span>
+        </div>
+        <div id="chatBody">
+            <div id="chatMessages">
+                <div class="bot-message" style="background: var(--bg-secondary); padding: 8px 12px; border-radius: 12px 12px 12px 4px; align-self: flex-start; max-width: 80%; color: var(--text-primary);">
+                    👋 Привет! Я твой ИИ-помощник. Задай вопрос по информационной безопасности.
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
+                <input type="text" id="chatInput" placeholder="Спросить..." style="flex: 1; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 8px 12px; color: var(--text-primary);">
+                <button id="chatSend" class="btn btn-primary" style="padding: 8px 16px;">→</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Робот-ассистент (иконка, появляется при свёрнутом чате) -->
+    <div id="robotContainer">
+        <span style="font-size: 32px;">🤖</span>
+    </div>
+
+    <script>
+        // Управление чатом
+        const chatContainer = document.getElementById('chatContainer');
+        const robotContainer = document.getElementById('robotContainer');
+        const chatToggle = document.getElementById('chatToggle');
+        const chatBody = document.getElementById('chatBody');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatArrow = document.getElementById('chatArrow');
+
+        let chatVisible = true;
+
+        chatToggle.addEventListener('click', () => {
+            chatVisible = !chatVisible;
+            if (chatVisible) {
+                chatBody.style.display = 'flex';
+                robotContainer.classList.remove('active');
+                chatArrow.textContent = '▼';
+            } else {
+                chatBody.style.display = 'none';
+                robotContainer.classList.add('active');
+                chatArrow.textContent = '▲';
+            }
+        });
+
+        async function sendMessage() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'user-message';
+            userMsg.style.cssText = 'background: var(--accent); padding: 8px 12px; border-radius: 12px 12px 4px 12px; align-self: flex-end; max-width: 80%; color: #fff;';
+            userMsg.textContent = text;
+            chatMessages.appendChild(userMsg);
+            chatInput.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const typing = document.createElement('div');
+            typing.className = 'bot-message typing';
+            typing.style.cssText = 'background: var(--bg-secondary); padding: 8px 12px; border-radius: 12px 12px 12px 4px; align-self: flex-start; color: var(--text-secondary); font-style: italic;';
+            typing.textContent = '🤖 печатает...';
+            chatMessages.appendChild(typing);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            const page = window.location.pathname.split('/')[1] || 'index';
+            let context = 'Общий вопрос по ИБ';
+            if (page === 'lesson') {
+                const lessonId = window.location.pathname.split('/')[2];
+                if (lessonId) context = `Урок ID ${lessonId}`;
+            }
+
+            try {
+                const response = await fetch('/ai/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: text, context: context })
+                });
+                const data = await response.json();
+                typing.remove();
+                const botMsg = document.createElement('div');
+                botMsg.className = 'bot-message';
+                botMsg.style.cssText = 'background: var(--bg-secondary); padding: 8px 12px; border-radius: 12px 12px 12px 4px; align-self: flex-start; max-width: 80%; color: var(--text-primary);';
+                botMsg.textContent = data.answer || '🤖 Извините, я пока не могу ответить.';
+                chatMessages.appendChild(botMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } catch (e) {
+                typing.remove();
+                const errMsg = document.createElement('div');
+                errMsg.className = 'bot-message error';
+                errMsg.style.cssText = 'background: var(--red); padding: 8px 12px; border-radius: 12px 12px 12px 4px; align-self: flex-start; max-width: 80%; color: #fff;';
+                errMsg.textContent = '❌ Ошибка при обращении к ИИ. Попробуйте позже.';
+                chatMessages.appendChild(errMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        chatSend.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            chatBody.style.display = 'flex';
+            robotContainer.classList.remove('active');
+            chatArrow.textContent = '▼';
+        });
+    </script>
 </body>
 </html>

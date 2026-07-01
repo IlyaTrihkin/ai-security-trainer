@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app import create_app, db
-from app.models import Skill, Lesson, Question, Achievement
+from app.models import Skill, Lesson, Topic, Achievement
 
 app = create_app()
 
@@ -29,37 +29,34 @@ with app.app_context():
     db.session.commit()
     print(f"✅ Загружено {len(skills_data)} скиллов")
 
-    # 2. Уроки
+    # 2. Уроки и темы
     lessons_dir = Path('data/lessons')
+    topics_dir = Path('data/topics')
     for lesson_file in sorted(lessons_dir.glob('*.json')):
         lesson_data = load_json(lesson_file)
         lesson = Lesson(**lesson_data)
         db.session.add(lesson)
-        print(f"   📘 Загружен урок: {lesson_data['title']}")
-    db.session.commit()
-    print(f"✅ Загружено {Lesson.query.count()} уроков")
-
-    # 3. Вопросы
-    questions_dir = Path('data/questions')
-    for q_file in sorted(questions_dir.glob('*.json')):
-        questions_data = load_json(q_file)
-        for q_data in questions_data:
-            lesson = Lesson.query.filter_by(title=q_data['lesson_title']).first()
-            if lesson:
-                question = Question(
+        db.session.flush()  # чтобы получить id урока
+        
+        # Загружаем темы для этого урока
+        topic_file = topics_dir / f"{lesson_data['title'].replace(' ', '_')}.json"
+        if topic_file.exists():
+            topics_data = load_json(topic_file)
+            for topic_data in topics_data:
+                topic = Topic(
                     lesson_id=lesson.id,
-                    type=q_data['type'],
-                    data=q_data['data'],
-                    points=q_data['points'],
-                    order=q_data['order']
+                    title=topic_data['title'],
+                    content=topic_data['content'],
+                    image_url=topic_data.get('image_url'),
+                    question=topic_data['question'],
+                    order=topic_data.get('order', 0)
                 )
-                db.session.add(question)
-            else:
-                print(f"   ⚠️ Урок '{q_data['lesson_title']}' не найден")
+                db.session.add(topic)
+        print(f"   📘 Загружен урок: {lesson_data['title']} с {len(lesson.topics)} темами")
     db.session.commit()
-    print(f"✅ Загружено {Question.query.count()} вопросов")
+    print(f"✅ Загружено {Lesson.query.count()} уроков, {Topic.query.count()} тем")
 
-    # 4. Достижения
+    # 3. Достижения
     try:
         achievements_data = load_json('data/achievements.json')
         for ach_data in achievements_data:
