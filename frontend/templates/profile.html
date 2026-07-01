@@ -3,17 +3,24 @@
 {% block title %}Профиль{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h4 class="card-title">Профиль</h4>
-                <p><strong>Имя:</strong> {{ user.username }}</p>
-                <p><strong>Email:</strong> {{ user.email }}</p>
-                <p><strong>Уровень:</strong> {{ user.level }}</p>
-                <p><strong>XP:</strong> {{ user.xp }}</p>
-                <p><strong>Streak:</strong> {{ user.streak }} дней</p>
+<div class="animate-in" style="max-width: 600px; margin: 0 auto;">
+    <div class="card">
+        <h2 style="margin-bottom: 20px;">👤 Профиль</h2>
+        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 24px;">
+            <div class="avatar" style="width: 64px; height: 64px; font-size: 28px;">{{ user.username[0].upper() }}</div>
+            <div>
+                <h4 style="margin: 0;">{{ user.username }}</h4>
+                <p style="color: var(--text-secondary); margin: 0;">{{ user.email }}</p>
             </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div><strong>Уровень</strong><br>{{ user.level }}</div>
+            <div><strong>XP</strong><br>{{ user.xp }}</div>
+            <div><strong>Streak</strong><br>{{ user.streak }} дней</div>
+            <div><strong>Дата регистрации</strong><br>{{ user.created_at.strftime('%d.%m.%Y') }}</div>
+        </div>
+        <div style="margin-top: 20px;">
+            <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">На дашборд</a>
         </div>
     </div>
 </div>

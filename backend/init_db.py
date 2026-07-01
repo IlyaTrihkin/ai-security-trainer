@@ -5,6 +5,7 @@ import sys
 import os
 import json
 from pathlib import Path
+from app.models import Skill, Lesson, Question, Achievement
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -66,3 +67,11 @@ with app.app_context():
     print(f"✅ Загружено {Question.query.count()} вопросов")
 
     print("\n🎉 База данных успешно инициализирована!")
+
+    # 4. Загружаем достижения
+    achievements_data = load_json('data/achievements.json')
+    for ach_data in achievements_data:
+        ach = Achievement(**ach_data)
+        db.session.add(ach)
+    db.session.commit()
+    print(f"✅ Загружено {Achievement.query.count()} достижений")

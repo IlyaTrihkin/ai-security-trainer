@@ -1,22 +1,23 @@
 {% extends "base.html" %}
 
-{% block title %}Результат: {{ lesson.title }}{% endblock %}
+{% block title %}Результат{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow-sm text-center">
-            <div class="card-body py-5">
-                <h2 class="mb-4">📊 Результат</h2>
-                <h4>{{ lesson.title }}</h4>
-                <div class="display-1 my-4">{{ correct_count }}/{{ total_questions }}</div>
-                <p class="lead">Правильных ответов</p>
-                <p>Вы заработали <strong>{{ total_points }}</strong> XP!</p>
-                <p>Текущий уровень: <strong>{{ user.level }}</strong></p>
-                <p>Всего XP: <strong>{{ user.xp }}</strong></p>
-                <a href="{{ url_for('main.skills') }}" class="btn btn-primary mt-3">Вернуться к карте навыков</a>
-            </div>
+<div class="animate-in" style="max-width: 600px; margin: 40px auto; text-align: center;">
+    <div class="card" style="padding: 40px;">
+        <h2 style="font-size: 32px;">📊 Результат</h2>
+        <h4 style="color: var(--text-secondary); margin-bottom: 20px;">{{ lesson.title }}</h4>
+        <div style="font-size: 64px; font-weight: 800; color: var(--accent);">
+            {{ correct_count }} / {{ total_questions }}
         </div>
+        <p style="color: var(--text-secondary);">правильных ответов</p>
+        <div style="margin: 24px 0;">
+            <span style="background: var(--bg-secondary); padding: 8px 20px; border-radius: 20px; color: var(--accent); font-weight: 700;">
+                +{{ total_points }} XP
+            </span>
+        </div>
+        <p style="color: var(--text-secondary);">Уровень: {{ user.level }} · Всего XP: {{ user.xp }}</p>
+        <a href="{{ url_for('main.skills') }}" class="btn btn-primary" style="margin-top: 16px;">Вернуться к карте навыков</a>
     </div>
 </div>
 {% endblock %}

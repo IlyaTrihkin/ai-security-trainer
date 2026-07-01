@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Первый шаг",
+    "description": "Пройдите свой первый урок",
+    "icon": "👣",
+    "condition_type": "lessons_completed",
+    "condition_value": 1
+  },
+  {
+    "name": "Ученик",
+    "description": "Пройдите 5 уроков",
+    "icon": "📚",
+    "condition_type": "lessons_completed",
+    "condition_value": 5
+  },
+  {
+    "name": "Знаток",
+    "description": "Пройдите 10 уроков",
+    "icon": "🎓",
+    "condition_type": "lessons_completed",
+    "condition_value": 10
+  },
+  {
+    "name": "Начинающий",
+    "description": "Наберите 100 XP",
+    "icon": "🌟",
+    "condition_type": "xp_earned",
+    "condition_value": 100
+  },
+  {
+    "name": "Опытный",
+    "description": "Наберите 500 XP",
+    "icon": "🔥",
+    "condition_type": "xp_earned",
+    "condition_value": 500
+  },
+  {
+    "name": "Трудоголик",
+    "description": "Занимайтесь 3 дня подряд",
+    "icon": "💪",
+    "condition_type": "streak_days",
+    "condition_value": 3
+  },
+  {
+    "name": "Железный человек",
+    "description": "Занимайтесь 7 дней подряд",
+    "icon": "🏋️",
+    "condition_type": "streak_days",
+    "condition_value": 7
+  },
+  {
+    "name": "Борец с фишингом",
+    "description": "Пройдите все уроки по фишингу",
+    "icon": "⚔️",
+    "condition_type": "skill_completed",
+    "condition_value": 4
+  }
+]

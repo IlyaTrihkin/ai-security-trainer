@@ -1,17 +1,45 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Security Trainer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container text-center py-5">
-        <h1 class="display-4">🧠 AI Security Trainer</h1>
-        <p class="lead">Интерактивный тренажёр по информационной безопасности</p>
-        <p class="text-muted">Скоро здесь будет геймификация, ИИ-сценарии и уроки по ИБ.</p>
-        <a href="#" class="btn btn-primary btn-lg disabled">Начать обучение</a>
+{% extends "base.html" %}
+
+{% block title %}Главная{% endblock %}
+
+{% block content %}
+<div class="animate-in" style="max-width: 800px; margin: 40px auto; text-align: center;">
+    <h1 style="font-size: 48px; font-weight: 800; margin-bottom: 16px;">
+        🧠<span style="color: var(--accent);"> AI</span> Security Trainer
+    </h1>
+    <p style="font-size: 20px; color: var(--text-secondary); margin-bottom: 32px;">
+        Интерактивный тренажёр по информационной безопасности с геймификацией и ИИ.
+    </p>
+
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.skills') }}" class="btn btn-primary" style="font-size: 18px; padding: 14px 40px;">
+            🚀 Начать обучение
+        </a>
+    {% else %}
+        <a href="{{ url_for('main.register') }}" class="btn btn-primary" style="font-size: 18px; padding: 14px 40px;">
+            Присоединиться
+        </a>
+        <a href="{{ url_for('main.login') }}" class="btn btn-outline" style="font-size: 18px; padding: 14px 40px; margin-left: 12px;">
+            Войти
+        </a>
+    {% endif %}
+
+    <div style="margin-top: 60px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px;">
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 40px;">📚</div>
+            <h4 style="margin-top: 8px;">Уроки</h4>
+            <p style="color: var(--text-secondary); font-size: 14px;">Интерактивные сценарии по ИБ</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 40px;">🏆</div>
+            <h4 style="margin-top: 8px;">Достижения</h4>
+            <p style="color: var(--text-secondary); font-size: 14px;">Зарабатывай бейджи за успехи</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 40px;">📈</div>
+            <h4 style="margin-top: 8px;">Лидерборд</h4>
+            <p style="color: var(--text-secondary); font-size: 14px;">Соревнуйся с коллегами</p>
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

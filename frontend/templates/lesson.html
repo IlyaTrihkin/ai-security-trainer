@@ -3,36 +3,39 @@
 {% block title %}{{ lesson.title }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h2 class="mb-3">{{ lesson.skill.icon }} {{ lesson.title }}</h2>
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <p>{{ lesson.content|replace('\n', '<br>')|safe }}</p>
+<div class="animate-in">
+    <h2 style="margin-bottom: 8px;">{{ lesson.skill.icon }} {{ lesson.title }}</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">Урок по навыку «{{ lesson.skill.title }}»</p>
+
+    <form method="POST">
+        <div class="lesson-layout">
+            <!-- Теория слева -->
+            <div class="lesson-theory">
+                <h4 style="margin-bottom: 12px;">📖 Теория</h4>
+                <div style="line-height: 1.7; color: var(--text-primary);">
+                    {{ lesson.content|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+
+            <!-- Вопросы справа -->
+            <div class="lesson-questions">
+                <h4 style="margin-bottom: 12px;">❓ Вопросы</h4>
+                {% for question in questions %}
+                    <div class="question-card">
+                        <div class="question-text">{{ question.data.question }}</div>
+                        <div class="options">
+                            {% for option in question.data.options %}
+                                <label class="option">
+                                    <input type="radio" name="question_{{ question.id }}" value="{{ loop.index0 }}" required>
+                                    {{ option }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-success" style="align-self: flex-start;">Отправить ответы</button>
             </div>
         </div>
-
-        <h4>Проверьте свои знания</h4>
-        <form method="POST">
-            {% for question in questions %}
-                <div class="card shadow-sm mb-3">
-                    <div class="card-body">
-                        <p><strong>{{ question.data.question }}</strong></p>
-                        {% if question.type == 'choice' %}
-                            {% for option in question.data.options %}
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="question_{{ question.id }}" value="{{ loop.index0 }}" id="q{{ question.id }}_{{ loop.index0 }}">
-                                    <label class="form-check-label" for="q{{ question.id }}_{{ loop.index0 }}">
-                                        {{ option }}
-                                    </label>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-            <button type="submit" class="btn btn-success">Отправить ответы</button>
-        </form>
-    </div>
+    </form>
 </div>
 {% endblock %}

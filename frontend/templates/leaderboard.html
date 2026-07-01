@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Лидерборд{% endblock %}
+
+{% block content %}
+<div class="animate-in">
+    <h2 style="margin-bottom: 24px;">🏆 Лидерборд</h2>
+    <div class="leaderboard-list">
+        {% for entry in leaderboard %}
+            <div class="leaderboard-item" {% if entry.username == user.username %}style="border-color: var(--accent); background: rgba(74, 124, 247, 0.05);"{% endif %}>
+                <div class="place">
+                    {% if entry.place == 1 %}🥇
+                    {% elif entry.place == 2 %}🥈
+                    {% elif entry.place == 3 %}🥉
+                    {% else %}{{ entry.place }}
+                    {% endif %}
+                </div>
+                <div class="avatar">{{ entry.username[0].upper() }}</div>
+                <div class="info">
+                    <div class="name">{{ entry.username }}</div>
+                    <div class="level">Уровень {{ entry.level }}</div>
+                </div>
+                <div class="xp">{{ entry.xp }} XP</div>
+            </div>
+        {% else %}
+            <div class="card">Пока нет пользователей. Будьте первым!</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
