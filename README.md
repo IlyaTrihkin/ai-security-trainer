@@ -81,6 +81,40 @@ docker compose exec backend python init_db.py
 
 ---
 
+## 🎯 Архитектура проекта
+
+Проект построен по принципу клиент-серверной архитектуры с использованием Docker Compose для оркестрации сервисов.
+
+### Структура
+
+```text
+ai-security-trainer/
+├── backend/                      # Flask-приложение (Python)
+│   ├── app/
+│   │   ├── __init__.py           # Фабрика приложения
+│   │   ├── models.py             # SQLAlchemy модели (User, Skill, Lesson, Question, Progress, Achievement)
+│   │   ├── routes.py             # Маршруты (API и страницы)
+│   │   └── gamification.py       # Логика проверки достижений
+│   ├── data/                     # JSON-контент (уроки, вопросы, скиллы)
+│   │   ├── skills.json
+│   │   ├── lessons/
+│   │   ├── questions/
+│   │   └── achievements.json
+│   ├── init_db.py                # Скрипт инициализации БД
+│   └── Dockerfile
+├── frontend/                     # Шаблоны и статика
+│   ├── templates/                # Jinja2-шаблоны (страницы)
+│   ├── static/
+│   │   ├── css/                  # Стили (тёмная тема)
+│   │   ├── js/                   # Клиентская логика (конфетти, анимации)
+│   │   └── avatars/              # Загруженные аватары пользователей
+├── docker-compose.yml            # Оркестрация контейнеров
+├── .env                          # Переменные окружения
+└── README.md
+```
+
+---
+
 ## 🎯 Планы по развитию
 
 - Интеграция YandexGPT для генерации персонализированных вопросов.
