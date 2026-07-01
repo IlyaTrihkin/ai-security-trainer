@@ -8,7 +8,6 @@
 </head>
 <body>
 
-    <!-- Боковое меню -->
     <aside class="sidebar">
         <div class="sidebar-brand">
             🧠<span>AI</span>Sec
@@ -46,7 +45,13 @@
         {% if current_user.is_authenticated %}
         <div class="sidebar-footer">
             <div class="user-info">
-                <div class="avatar">{{ current_user.username[0].upper() }}</div>
+                {% if current_user.avatar %}
+                    <img src="{{ url_for('static', filename='avatars/' + current_user.avatar) }}" 
+                         alt="Аватар" 
+                         style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent);">
+                {% else %}
+                    <div class="avatar">{{ current_user.username[:2].upper() }}</div>
+                {% endif %}
                 <div>
                     <div class="user-name">{{ current_user.username }}</div>
                     <div class="user-level">Уровень {{ current_user.level }} · {{ current_user.xp }} XP</div>
@@ -56,9 +61,7 @@
         {% endif %}
     </aside>
 
-    <!-- Основной контент -->
     <main class="main-content">
-        <!-- Flash-сообщения -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}

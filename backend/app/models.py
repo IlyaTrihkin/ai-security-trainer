@@ -1,18 +1,19 @@
 from flask_login import UserMixin
 from datetime import datetime
-from . import db   # импортируем db из __init__.py
+from . import db
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
+    avatar = db.Column(db.String(200), nullable=True)  # путь к файлу
     level = db.Column(db.Integer, default=1)
     xp = db.Column(db.Integer, default=0)
     streak = db.Column(db.Integer, default=0)
     last_activity = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     progress = db.relationship('UserProgress', backref='user', lazy=True)
     achievements = db.relationship('UserAchievement', backref='user', lazy=True)
 
@@ -40,7 +41,7 @@ class Lesson(db.Model):
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
-    type = db.Column(db.String(20), nullable=False)  # choice, sort, fill, dialogue, interactive
+    type = db.Column(db.String(20), nullable=False)
     data = db.Column(db.JSON, nullable=False)
     points = db.Column(db.Integer, default=10)
     order = db.Column(db.Integer, default=0)

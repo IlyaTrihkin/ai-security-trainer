@@ -15,7 +15,15 @@
                     {% else %}{{ entry.place }}
                     {% endif %}
                 </div>
-                <div class="avatar">{{ entry.username[0].upper() }}</div>
+                <div class="avatar">
+                    {% if entry.avatar %}
+                        <img src="{{ url_for('static', filename='avatars/' + entry.avatar) }}" 
+                             alt="Аватар" 
+                             style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
+                        {{ entry.username[:2].upper() }}
+                    {% endif %}
+                </div>
                 <div class="info">
                     <div class="name">{{ entry.username }}</div>
                     <div class="level">Уровень {{ entry.level }}</div>

@@ -5,32 +5,38 @@
 {% block content %}
 <div class="animate-in">
     <h2 style="margin-bottom: 24px;">🌳 Карта навыков</h2>
-    <div class="skill-tree">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         {% for skill in skills %}
-            <div class="skill-node">
-                <div class="skill-header">
-                    <span class="skill-icon">{{ skill.icon }}</span>
-                    <span class="skill-title">{{ skill.title }}</span>
-                    <span class="skill-meta">{{ skill.lessons|length }} уроков · {{ skill.difficulty }}</span>
-                </div>
-                <div class="skill-children">
-                    {% for lesson in skill.lessons|sort(attribute='order') %}
-                        <div class="lesson-item">
-                            <span class="lesson-status">
-                                {% if lesson.id in completed_lessons %}✅{% else %}⏳{% endif %}
-                            </span>
-                            <span class="lesson-title">{{ lesson.title }}</span>
-                            <span class="lesson-action">
-                                {% if lesson.id in completed_lessons %}
-                                    <span style="color: var(--green); font-size: 13px;">Пройдено</span>
-                                {% else %}
-                                    <a href="{{ url_for('main.lesson', lesson_id=lesson.id) }}" class="btn btn-primary" style="padding: 4px 14px; font-size: 12px;">Начать</a>
-                                {% endif %}
-                            </span>
+            <div class="card" style="display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 32px;">{{ skill.icon }}</span>
+                    <div>
+                        <h4 style="margin: 0;">{{ skill.title }}</h4>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            {{ skill.lessons|length }} уроков · {{ skill.difficulty }}
                         </div>
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    {% if skill.lessons %}
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            {% for lesson in skill.lessons|sort(attribute='order') %}
+                                <li style="display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border-color);">
+                                    <span style="font-size: 16px;">
+                                        {% if lesson.id in completed_lessons %}✅{% else %}⏳{% endif %}
+                                    </span>
+                                    <span style="flex: 1;">{{ lesson.title }}</span>
+                                    {% if lesson.id in completed_lessons %}
+                                        <span style="color: var(--green); font-size: 12px;">Пройдено</span>
+                                    {% else %}
+                                        <a href="{{ url_for('main.lesson', lesson_id=lesson.id) }}" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">Начать</a>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
                     {% else %}
-                        <div style="color: var(--text-secondary); font-size: 14px; padding: 8px 12px;">Нет уроков</div>
-                    {% endfor %}
+                        <p style="color: var(--text-secondary); font-size: 14px;">Нет уроков</p>
+                    {% endif %}
                 </div>
             </div>
         {% endfor %}

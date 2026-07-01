@@ -1,4 +1,4 @@
-// Простая анимация конфетти при получении достижения (заглушка)
+// Конфетти при достижениях
 document.addEventListener('DOMContentLoaded', () => {
     const alerts = document.querySelectorAll('.alert-success');
     alerts.forEach(alert => {
