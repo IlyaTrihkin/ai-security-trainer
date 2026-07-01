@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Карта навыков{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">🌳 Карта навыков</h2>
+
+<div class="row">
+    {% for skill in skills %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span style="font-size: 1.5rem;">{{ skill.icon }}</span>
+                        {{ skill.title }}
+                    </h5>
+                    <p class="card-text text-muted">{{ skill.description }}</p>
+                    <p class="small">
+                        <span class="badge bg-secondary">{{ skill.difficulty }}</span>
+                        <span class="badge bg-info">{{ skill.lessons|length }} уроков</span>
+                    </p>
+                    <ul class="list-group list-group-flush">
+                        {% for lesson in skill.lessons|sort(attribute='order') %}
+                            {% if lesson.id in completed_lessons %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>✅ {{ lesson.title }}</span>
+                                    <span class="badge bg-success">Пройдено</span>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ lesson.title }}</span>
+                                    <a href="{{ url_for('main.lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-primary">Начать</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

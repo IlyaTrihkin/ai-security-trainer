@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Результат: {{ lesson.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm text-center">
+            <div class="card-body py-5">
+                <h2 class="mb-4">📊 Результат</h2>
+                <h4>{{ lesson.title }}</h4>
+                <div class="display-1 my-4">{{ correct_count }}/{{ total_questions }}</div>
+                <p class="lead">Правильных ответов</p>
+                <p>Вы заработали <strong>{{ total_points }}</strong> XP!</p>
+                <p>Текущий уровень: <strong>{{ user.level }}</strong></p>
+                <p>Всего XP: <strong>{{ user.xp }}</strong></p>
+                <a href="{{ url_for('main.skills') }}" class="btn btn-primary mt-3">Вернуться к карте навыков</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

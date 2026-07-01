@@ -9,18 +9,26 @@
             <div class="card-body text-center">
                 <h5>{{ user.username }}</h5>
                 <p class="text-muted">Уровень {{ user.level }}</p>
-                <div class="progress">
-                    <div class="progress-bar" style="width: {{ user.xp % 100 }}%"></div>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" style="width: {{ user.xp % 50 }}%; background-color: #2A7DE1;">
+                        {{ user.xp % 50 }}%
+                    </div>
                 </div>
-                <small>{{ user.xp }} XP</small>
+                <small>{{ user.xp }} XP (следующий уровень через {{ 50 - (user.xp % 50) }} XP)</small>
             </div>
         </div>
     </div>
     <div class="col-md-8">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h5>Карта навыков</h5>
-                <p class="text-muted">Скоро здесь появится дерево навыков.</p>
+                <h5>Ваш прогресс</h5>
+                <p class="text-muted">Вы прошли {{ progress_percent }}% всех уроков.</p>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar" style="width: {{ progress_percent }}%; background-color: #28A745;">
+                        {{ progress_percent }}%
+                    </div>
+                </div>
+                <a href="{{ url_for('main.skills') }}" class="btn btn-outline-primary mt-3">Перейти к карте навыков</a>
             </div>
         </div>
     </div>
