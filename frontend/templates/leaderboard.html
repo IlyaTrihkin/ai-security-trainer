@@ -5,32 +5,56 @@
 {% block content %}
 <div class="animate-in">
     <h2 style="margin-bottom: 24px;">🏆 Лидерборд</h2>
-    <div class="leaderboard-list">
-        {% for entry in leaderboard %}
-            <div class="leaderboard-item {% if entry.username == user.username %}active{% endif %}">
-                <div class="place">
-                    {% if entry.place == 1 %}🥇
-                    {% elif entry.place == 2 %}🥈
-                    {% elif entry.place == 3 %}🥉
-                    {% else %}{{ entry.place }}
-                    {% endif %}
-                </div>
-                <div class="avatar">
-                    {% if entry.avatar %}
-                        <img src="{{ url_for('static', filename='avatars/' + entry.avatar) }}" alt="Аватар">
-                    {% else %}
-                        {{ entry.username[:2].upper() }}
-                    {% endif %}
-                </div>
-                <div class="info">
-                    <div class="name">{{ entry.username }}</div>
-                    <div class="level">Уровень {{ entry.level }}</div>
-                </div>
-                <div class="xp">{{ entry.xp }} XP</div>
-            </div>
-        {% else %}
-            <div class="card">Пока нет пользователей. Будьте первым!</div>
-        {% endfor %}
-    </div>
+
+    {% if leaderboard %}
+        <div class="card" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <th style="padding: 12px 16px; text-align: left; color: var(--text-secondary); font-weight: 600;">Место</th>
+                        <th style="padding: 12px 16px; text-align: left; color: var(--text-secondary); font-weight: 600;">Пользователь</th>
+                        <th style="padding: 12px 16px; text-align: center; color: var(--text-secondary); font-weight: 600;">Уровень</th>
+                        <th style="padding: 12px 16px; text-align: right; color: var(--text-secondary); font-weight: 600;">XP</th>
+                        <th style="padding: 12px 16px; text-align: center; color: var(--text-secondary); font-weight: 600;">Уроков</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in leaderboard %}
+                        <tr style="border-bottom: 1px solid var(--border-color); 
+                                   {% if user.is_authenticated and entry.username == user.username %}background: var(--accent); opacity: 0.9;{% endif %}
+                                   transition: var(--transition);">
+                            <td style="padding: 12px 16px; font-weight: 700; white-space: nowrap;">
+                                {% if entry.place == 1 %}🥇
+                                {% elif entry.place == 2 %}🥈
+                                {% elif entry.place == 3 %}🥉
+                                {% else %}{{ entry.place }}
+                                {% endif %}
+                            </td>
+                            <td style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
+                                {% if entry.avatar %}
+                                    <img src="{{ url_for('static', filename='avatars/' + entry.avatar) }}" 
+                                         alt="Аватар" 
+                                         style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); flex-shrink: 0;">
+                                {% else %}
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;">
+                                        {{ entry.username[:2].upper() }}
+                                    </div>
+                                {% endif %}
+                                <strong>{{ entry.username }}</strong>
+                            </td>
+                            <td style="padding: 12px 16px; text-align: center;">{{ entry.level }}</td>
+                            <td style="padding: 12px 16px; text-align: right; font-weight: 600; color: var(--accent);">{{ entry.xp }}</td>
+                            <td style="padding: 12px 16px; text-align: center;">{{ entry.lessons }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 48px 24px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🏆</div>
+            <p>Пока нет пользователей. Будьте первым!</p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

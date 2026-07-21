@@ -1,45 +1,135 @@
 {% extends "base.html" %}
 
-{% block title %}Карта навыков{% endblock %}
+{% block title %}Навыки{% endblock %}
 
 {% block content %}
 <div class="animate-in">
-    <h2 style="margin-bottom: 24px;">🌳 Карта навыков</h2>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        {% for skill in skills %}
-            <div class="card" style="display: flex; flex-direction: column;">
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                    <span style="font-size: 32px;">{{ skill.icon }}</span>
-                    <div>
-                        <h4 style="margin: 0;">{{ skill.title }}</h4>
-                        <div style="font-size: 12px; color: var(--text-secondary);">
-                            {{ skill.lessons|length }} уроков · {{ skill.difficulty }}
-                        </div>
-                    </div>
-                </div>
-                <div style="flex: 1;">
-                    {% if skill.lessons %}
-                        <ul style="list-style: none; padding: 0; margin: 0;">
-                            {% for lesson in skill.lessons|sort(attribute='order') %}
-                                <li style="display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border-color);">
-                                    <span style="font-size: 16px;">
-                                        {% if lesson.id in completed_lessons %}✅{% else %}⏳{% endif %}
-                                    </span>
-                                    <span style="flex: 1;">{{ lesson.title }}</span>
-                                    {% if lesson.id in completed_lessons %}
-                                        <span style="color: var(--green); font-size: 12px;">Пройдено</span>
-                                    {% else %}
-                                        <a href="{{ url_for('main.lesson', lesson_id=lesson.id) }}" class="btn btn-primary" style="padding: 4px 12px; font-size: 12px;">Начать</a>
-                                    {% endif %}
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <p style="color: var(--text-secondary); font-size: 14px;">Нет уроков</p>
+    <h2 style="margin-bottom: 8px;">🛡️ Навыки</h2>
+    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+        Выберите навык и пройдите уроки, чтобы прокачать свои знания по информационной безопасности.
+    </p>
+
+    {% if levels %}
+        <!-- Табы по уровням -->
+        <div class="skills-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;">
+            {% for level in levels %}
+                <button class="skills-tab {% if loop.first %}active{% endif %}"
+                        data-level="{{ level }}"
+                        style="padding: 8px 20px; border: 1px solid var(--border-color); border-radius: var(--radius); background: var(--bg-card); color: var(--text-primary); cursor: pointer; font-size: 14px; transition: all 0.2s;">
+                    {% if level == 'beginner' %}🟢 Начальный
+                    {% elif level == 'intermediate' %}🟡 Средний
+                    {% elif level == 'advanced' %}🔴 Продвинутый
+                    {% else %}{{ level|capitalize }}
                     {% endif %}
+                </button>
+            {% endfor %}
+        </div>
+
+        <!-- Карточки навыков, сгруппированные по уровням -->
+        {% for level in levels %}
+            <div class="skills-level-group" data-level="{{ level }}"
+                 style="{% if not loop.first %}display: none;{% endif %}">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+                    {% for skill in grouped_skills[level] %}
+                        <div class="card skill-card"
+                             style="display: flex; flex-direction: column; padding: 20px; transition: transform 0.2s, box-shadow 0.2s;">
+                            <div style="display: flex; align-items: flex-start; gap: 14px; margin-bottom: 12px;">
+                                <span style="font-size: 36px; line-height: 1;">{{ skill.icon or '📚' }}</span>
+                                <div style="flex: 1; min-width: 0;">
+                                    <h4 style="margin: 0 0 4px 0; font-size: 16px; word-break: break-word;">
+                                        {{ skill.title }}
+                                    </h4>
+                                    <span style="font-size: 12px; color: var(--text-secondary); display: inline-block; padding: 2px 8px; background: var(--bg-secondary); border-radius: 12px;">
+                                        {% if skill.difficulty == 'beginner' %}🟢 Начальный
+                                        {% elif skill.difficulty == 'intermediate' %}🟡 Средний
+                                        {% elif skill.difficulty == 'advanced' %}🔴 Продвинутый
+                                        {% else %}{{ skill.difficulty|capitalize }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {% if skill.description %}
+                                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; flex: 1;">
+                                    {{ skill.description }}
+                                </p>
+                            {% endif %}
+
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
+                                <span style="font-size: 13px; color: var(--text-secondary);">
+                                    {{ skill.lessons|length }} уроков
+                                </span>
+                                {% if skill.lessons %}
+                                    <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                                        {% for lesson in skill.lessons|sort(attribute='order') %}
+                                            <a href="{{ url_for('main.lesson', lesson_id=lesson.id) if lesson.id else '#' }}"
+                                               class="btn btn-primary"
+                                               style="padding: 4px 14px; font-size: 12px; white-space: nowrap;">
+                                                {% if lesson.id in completed_lessons %}✅ {% endif %}{{ lesson.title }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <span style="color: var(--text-secondary); font-size: 12px; font-style: italic;">
+                                        Скоро появятся
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         {% endfor %}
-    </div>
+
+        <!-- JavaScript для переключения табов -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const tabs = document.querySelectorAll('.skills-tab');
+                const groups = document.querySelectorAll('.skills-level-group');
+
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', function() {
+                        // Сброс активного состояния у всех табов
+                        tabs.forEach(t => {
+                            t.classList.remove('active');
+                            t.style.background = 'var(--bg-card)';
+                            t.style.color = 'var(--text-primary)';
+                            t.style.borderColor = 'var(--border-color)';
+                        });
+
+                        // Активация текущего таба
+                        this.classList.add('active');
+                        this.style.background = 'var(--accent)';
+                        this.style.color = '#fff';
+                        this.style.borderColor = 'var(--accent)';
+
+                        // Показ нужной группы, скрытие остальных
+                        const targetLevel = this.dataset.level;
+                        groups.forEach(group => {
+                            if (group.dataset.level === targetLevel) {
+                                group.style.display = 'block';
+                            } else {
+                                group.style.display = 'none';
+                            }
+                        });
+                    });
+
+                    // Установка стилей для первого (активного) таба
+                    if (tab.classList.contains('active')) {
+                        tab.style.background = 'var(--accent)';
+                        tab.style.color = '#fff';
+                        tab.style.borderColor = 'var(--accent)';
+                    }
+                });
+            });
+        </script>
+    {% else %}
+        <div class="card" style="text-align: center; padding: 40px;">
+            <span style="font-size: 48px;">📚</span>
+            <p style="color: var(--text-secondary); margin-top: 16px;">
+                Навыки пока не добавлены. Загляните позже!
+            </p>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

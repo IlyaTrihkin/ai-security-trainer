@@ -33,6 +33,7 @@ class Lesson(db.Model):
     skill_id = db.Column(db.Integer, db.ForeignKey('skill.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)  # описание урока (краткое)
+    xp_reward = db.Column(db.Integer, default=10)
     order = db.Column(db.Integer, default=0)
     topics = db.relationship('Topic', backref='lesson', lazy=True, cascade='all, delete-orphan')
 

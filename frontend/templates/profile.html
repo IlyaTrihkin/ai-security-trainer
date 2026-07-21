@@ -57,6 +57,26 @@
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline">На дашборд</a>
         </div>
     </div>
+
+    <!-- Форма смены пароля -->
+    <div class="card" style="margin-top: 24px;">
+        <h3 style="margin-bottom: 20px;">🔒 Сменить пароль</h3>
+        <form method="POST" action="{{ url_for('main.profile') }}" style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+                <label for="current_password" style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary); font-size: 14px;">Текущий пароль</label>
+                <input type="password" name="current_password" id="current_password" style="width: 100%; padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-primary); font-size: 14px; box-sizing: border-box;" required>
+            </div>
+            <div>
+                <label for="new_password" style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary); font-size: 14px;">Новый пароль</label>
+                <input type="password" name="new_password" id="new_password" style="width: 100%; padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-primary); font-size: 14px; box-sizing: border-box;" required minlength="6">
+            </div>
+            <div>
+                <label for="confirm_password" style="display: block; margin-bottom: 6px; font-weight: 500; color: var(--text-secondary); font-size: 14px;">Подтвердите новый пароль</label>
+                <input type="password" name="confirm_password" id="confirm_password" style="width: 100%; padding: 10px 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-primary); font-size: 14px; box-sizing: border-box;" required minlength="6">
+            </div>
+            <button type="submit" class="btn btn-success">Сохранить пароль</button>
+        </form>
+    </div>
 </div>
 
 <script>

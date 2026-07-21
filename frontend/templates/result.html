@@ -3,21 +3,54 @@
 {% block title %}Результат{% endblock %}
 
 {% block content %}
-<div class="animate-in" style="max-width: 600px; margin: 40px auto; text-align: center;">
+<div class="animate-in" style="max-width: 700px; margin: 40px auto; text-align: center;">
     <div class="card" style="padding: 40px;">
         <h2 style="font-size: 32px;">📊 Результат</h2>
         <h4 style="color: var(--text-secondary); margin-bottom: 20px;">{{ lesson.title }}</h4>
         <div style="font-size: 64px; font-weight: 800; color: var(--accent);">
             {{ correct_count }} / {{ total_questions }}
         </div>
-        <p style="color: var(--text-secondary);">правильных ответов</p>
-        <div style="margin: 24px 0;">
-            <span style="background: var(--bg-secondary); padding: 8px 20px; border-radius: 20px; color: var(--accent); font-weight: 700;">
-                +{{ total_points }} XP
-            </span>
+        <p style="color: var(--text-secondary);">правильных ответов ({{ percentage }}%)</p>
+
+        {% if percentage >= 70 %}
+            <div style="margin: 24px 0;">
+                <span style="background: var(--bg-secondary); padding: 8px 20px; border-radius: 20px; color: var(--accent); font-weight: 700;">
+                    +{{ xp_earned }} XP
+                </span>
+            </div>
+            <p style="color: var(--text-secondary);">Уровень: {{ user.level }} · Всего XP: {{ user.xp }}</p>
+        {% else %}
+            <div style="margin: 24px 0;">
+                <span style="background: var(--bg-secondary); padding: 8px 20px; border-radius: 20px; font-weight: 700;">
+                    +0 XP
+                </span>
+            </div>
+            <p style="color: var(--text-secondary);">Нужно набрать 70% или больше, чтобы получить XP. Попробуйте ещё раз!</p>
+        {% endif %}
+
+        {% if achievements %}
+            <div style="margin: 24px 0 0 0; padding: 16px; background: var(--bg-secondary); border-radius: 12px; text-align: left;">
+                <h5 style="margin: 0 0 12px 0;">🏆 Новые достижения:</h5>
+                {% for ach in achievements %}
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                        <span style="font-size: 24px;">{{ ach.icon }}</span>
+                        <div>
+                            <strong style="color: var(--accent);">{{ ach.name }}</strong>
+                            <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">{{ ach.description }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap;">
+            <a href="{{ url_for('main.skills') }}" class="btn btn-primary">Вернуться к карте навыков</a>
+            {% if next_lesson %}
+                <a href="{{ url_for('main.lesson', lesson_id=next_lesson.id) }}" class="btn btn-success">
+                    Следующий урок: {{ next_lesson.title }} →
+                </a>
+            {% endif %}
         </div>
-        <p style="color: var(--text-secondary);">Уровень: {{ user.level }} · Всего XP: {{ user.xp }}</p>
-        <a href="{{ url_for('main.skills') }}" class="btn btn-primary" style="margin-top: 16px;">Вернуться к карте навыков</a>
     </div>
 </div>
 {% endblock %}

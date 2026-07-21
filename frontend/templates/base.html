@@ -9,9 +9,9 @@
 <body>
 
     <aside class="sidebar">
-        <div class="sidebar-brand">
+        <a href="/" class="sidebar-brand">
             🧠<span>AI</span>Sec
-        </div>
+        </a>
         <nav class="sidebar-nav">
             <a href="{{ url_for('main.index') }}" class="{% if request.endpoint == 'main.index' %}active{% endif %}">
                 <span class="icon">🏠</span><span>Главная</span>
@@ -29,10 +29,10 @@
                 <a href="{{ url_for('main.profile') }}" class="{% if request.endpoint == 'main.profile' %}active{% endif %}">
                     <span class="icon">👤</span><span>Профиль</span>
                 </a>
-                <a href="{{ url_for('main.logout') }}">
-                    <span class="icon">🚪</span><span>Выйти</span>
-                </a>
             {% else %}
+                <a href="/skills" class="{% if request.endpoint == 'main.skills' %}active{% endif %}">
+                    <span class="icon">🛡️</span><span>Навыки</span>
+                </a>
                 <a href="{{ url_for('main.login') }}" class="{% if request.endpoint == 'main.login' %}active{% endif %}">
                     <span class="icon">🔑</span><span>Войти</span>
                 </a>
@@ -57,22 +57,45 @@
                     <div class="user-level">Уровень {{ current_user.level }} · {{ current_user.xp }} XP</div>
                 </div>
             </div>
+            <a href="{{ url_for('main.logout') }}" class="logout-btn">🚪 Выйти</a>
         </div>
         {% endif %}
     </aside>
 
     <main class="main-content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'danger' else 'danger' }} animate-in">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <div class="content-wrapper">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category if category != 'danger' else 'danger' }} animate-in">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        {% block content %}{% endblock %}
+            {% block content %}{% endblock %}
+        </div>
+
+        <footer class="site-footer">
+            <p class="footer-copy">&copy; 2026 Ilya Trishkin</p>
+            <p class="footer-links">
+                <a href="https://github.com/IlyaTrihkin/ai-security-trainer/blob/main/LICENSE" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="footer-link">Лицензия</a>
+                <span class="footer-sep">&middot;</span>
+                <a href="https://github.com/IlyaTrihkin" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   class="footer-link footer-github">
+                   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: -2px; margin-right: 4px;">
+                       <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                   </svg>
+                   GitHub
+                </a>
+            </p>
+        </footer>
     </main>
 
     <!-- ===== Чат-виджет (фиксированная позиция) ===== -->
@@ -113,18 +136,30 @@
 
         let chatVisible = true;
 
+        function collapseChat() {
+            chatVisible = false;
+            chatContainer.classList.add('collapsed');
+            robotContainer.classList.add('active');
+        }
+
+        function expandChat() {
+            chatVisible = true;
+            chatContainer.classList.remove('collapsed');
+            robotContainer.classList.remove('active');
+            chatBody.style.display = 'flex';
+            chatArrow.textContent = '▼';
+        }
+
         chatToggle.addEventListener('click', () => {
-            chatVisible = !chatVisible;
             if (chatVisible) {
-                chatBody.style.display = 'flex';
-                robotContainer.classList.remove('active');
-                chatArrow.textContent = '▼';
-            } else {
-                chatBody.style.display = 'none';
-                robotContainer.classList.add('active');
+                collapseChat();
                 chatArrow.textContent = '▲';
+            } else {
+                expandChat();
             }
         });
+
+        robotContainer.addEventListener('click', expandChat);
 
         async function sendMessage() {
             const text = chatInput.value.trim();
@@ -181,9 +216,7 @@
         chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendMessage(); });
 
         document.addEventListener('DOMContentLoaded', () => {
-            chatBody.style.display = 'flex';
-            robotContainer.classList.remove('active');
-            chatArrow.textContent = '▼';
+            expandChat();
         });
     </script>
 </body>

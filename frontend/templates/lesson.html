@@ -4,15 +4,34 @@
 
 {% block content %}
 <div class="animate-in" style="display: flex; flex-direction: column; gap: 24px; position: relative; padding-bottom: 100px;">
-    <h2 style="margin-bottom: 8px;">{{ lesson.skill.icon }} {{ lesson.title }}</h2>
-    <p style="color: var(--text-secondary);">{{ lesson.description }}</p>
+    <!-- Заголовок урока -->
+    <div>
+        <h2 style="margin-bottom: 4px;">{{ lesson.skill.icon }} {{ lesson.title }}</h2>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            {% if lesson.description %}
+                <p style="color: var(--text-secondary); margin: 0;">{{ lesson.description }}</p>
+            {% endif %}
+            <span style="font-size: 12px; padding: 3px 10px; background: var(--bg-secondary); border-radius: 12px; white-space: nowrap;">
+                {% set diff = lesson.skill.difficulty %}
+                {% if diff == 'beginner' %}🟢 Начальный
+                {% elif diff == 'intermediate' %}🟡 Средний
+                {% elif diff == 'advanced' %}🔴 Продвинутый
+                {% else %}{{ diff|capitalize if diff else 'Не указано' }}
+                {% endif %}
+            </span>
+            <span style="font-size: 14px; font-weight: 600; color: var(--accent);">
+                ⭐ {{ total_xp }} XP
+            </span>
+        </div>
+    </div>
 
+    <!-- Две колонки: теория и вопросы -->
     <div class="lesson-grid">
-        <!-- Левая колонка: теория -->
-        <div style="max-height: 500px; overflow-y: auto; padding-right: 12px;">
+        <!-- Левая колонка: темы (теория) -->
+        <div style="display: flex; flex-direction: column; gap: 20px; max-height: 500px; overflow-y: auto; padding-right: 12px;">
             {% for topic in topics %}
-                <div class="topic-card">
-                    <h4 style="margin-top: 0;">{{ topic.title }}</h4>
+                <div class="topic-card card" style="padding: 20px;">
+                    <h4 style="margin: 0 0 8px 0;">📖 {{ topic.title }}</h4>
                     {% if topic.image_url %}
                         <img src="{{ topic.image_url }}" alt="{{ topic.title }}" style="max-width: 100%; border-radius: 8px; margin: 12px 0;">
                     {% endif %}
@@ -25,21 +44,26 @@
 
         <!-- Правая колонка: вопросы -->
         <div style="position: sticky; top: 24px; max-height: 500px; overflow-y: auto;">
-            <form method="POST" id="lessonForm">
+            <form method="POST" action="{{ url_for('main.submit_lesson', lesson_id=lesson.id) }}" id="lessonForm">
                 {% for topic in topics %}
-                    <div class="question-card">
-                        <p style="font-weight: 600; margin-bottom: 12px;">{{ topic.question.text }}</p>
-                        <div class="options">
+                    <div class="question-card card" style="padding: 20px; margin-bottom: 16px;">
+                        <p style="font-weight: 600; margin: 0 0 12px 0;">
+                            Вопрос {{ loop.index }}: {{ topic.question.text }}
+                        </p>
+                        <div class="options" style="display: flex; flex-direction: column; gap: 8px;">
                             {% for option in topic.question.options %}
-                                <label class="option">
-                                    <input type="radio" name="topic_{{ topic.id }}" value="{{ loop.index0 }}" required>
+                                <label class="option" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--bg-secondary); border-radius: var(--radius); cursor: pointer; transition: background 0.15s;">
+                                    <input type="radio" name="question_{{ topic.id }}" value="{{ loop.index0 }}" required
+                                           style="accent-color: var(--accent); width: 16px; height: 16px;">
                                     {{ option }}
                                 </label>
                             {% endfor %}
                         </div>
                     </div>
                 {% endfor %}
-                <button type="submit" class="btn btn-success" style="width: 100%;">Отправить ответы</button>
+                <button type="submit" class="btn btn-success" style="width: 100%; padding: 14px; font-size: 16px; margin-top: 8px;">
+                    ✅ Отправить ответы
+                </button>
             </form>
         </div>
     </div>

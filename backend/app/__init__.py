@@ -5,17 +5,22 @@ from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+basedir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+env_path = os.path.join(basedir, '.env')
+load_dotenv(env_path)
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 migrate = Migrate()
 
 def create_app():
-    app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
-    
+    app = Flask(__name__)  # Теперь Flask сам найдёт templates и static внутри пакета (backend/app)
+
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-key-please-change-in-production')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://postgres:postgres@db:5432/security_trainer')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+        'DATABASE_URL',
+        f'sqlite:///{os.path.join(basedir, "instance", "security_trainer.db")}'
+    )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
@@ -29,7 +34,6 @@ def create_app():
     app.register_blueprint(main_bp)
 
     return app
-
 
 @login_manager.user_loader
 def load_user(user_id):
