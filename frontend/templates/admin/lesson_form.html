@@ -1,0 +1,328 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<h2>{% if lesson %}Редактировать урок{% else %}Новый урок{% endif %}</h2>
+
+<form method="POST" class="admin-form" id="lesson-form">
+    <div class="form-group">
+        <label for="title" class="form-label">Название</label>
+        <input type="text" id="title" name="title" class="form-control" value="{{ lesson.title if lesson else '' }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description" class="form-label">Описание</label>
+        <textarea id="description" name="description" class="form-control tinymce" rows="4">{{ lesson.description if lesson else '' }}</textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="difficulty" class="form-label">Сложность</label>
+            <select id="difficulty" name="difficulty" class="form-control">
+                <option value="Начальный" {% if lesson and lesson.difficulty == 'Начальный' %}selected{% endif %}>Начальный</option>
+                <option value="Средний" {% if lesson and lesson.difficulty == 'Средний' %}selected{% endif %}>Средний</option>
+                <option value="Продвинутый" {% if lesson and lesson.difficulty == 'Продвинутый' %}selected{% endif %}>Продвинутый</option>
+            </select>
+        </div>
+        <div class="form-group form-half">
+            <label for="skill_id" class="form-label">Навык</label>
+            <select id="skill_id" name="skill_id" class="form-control">
+                <option value="">— Без навыка —</option>
+                {% for s in skills %}
+                <option value="{{ s.id }}" {% if lesson and lesson.skill_id == s.id %}selected{% endif %}>{{ s.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="xp_reward" class="form-label">XP награда</label>
+            <input type="number" id="xp_reward" name="xp_reward" class="form-control" value="{{ lesson.xp_reward if lesson else 10 }}" min="0">
+        </div>
+        <div class="form-group form-half">
+            <label for="duration_minutes" class="form-label">Длительность (мин)</label>
+            <input type="number" id="duration_minutes" name="duration_minutes" class="form-control" value="{{ lesson.duration_minutes if lesson else 30 }}" min="1">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="order" class="form-label">Порядок сортировки</label>
+            <input type="number" id="order" name="order" class="form-control" value="{{ lesson.order if lesson else 0 }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="homework_text" class="form-label">Текст домашнего задания</label>
+        <textarea id="homework_text" name="homework_text" class="form-control tinymce" rows="4">{{ lesson.homework_text if lesson else '' }}</textarea>
+    </div>
+
+    <div class="form-group">
+        <label for="practice_config" class="form-label">Конфигурация практики (JSON)</label>
+        <textarea id="practice_config" name="practice_config" class="form-control" rows="3" placeholder='{"type": "quiz", "questions": [...] }'>{{ lesson.practice_config if lesson else '' }}</textarea>
+    </div>
+
+    <!-- ======================== -->
+    <!-- ТЕМЫ                     -->
+    <!-- ======================== -->
+    <div class="section-divider">
+        <h3>📖 Темы</h3>
+        <button type="button" class="btn btn-sm btn-outline" onclick="addTopicBlock()">+ Добавить тему</button>
+    </div>
+    <div id="topics-container">
+        {% if lesson and lesson.topics %}
+        {% for topic in lesson.topics %}
+        <div class="topic-block">
+            <div class="topic-header">
+                <span>Тема {{ loop.index }}</span>
+                <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.topic-block').remove(); updateTopicNumbers();">✕</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Название темы</label>
+                <input type="text" name="topic_title" class="form-control" value="{{ topic.title }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Содержание</label>
+                <textarea name="topic_content" class="form-control tinymce" rows="3">{{ topic.content }}</textarea>
+            </div>
+            <div class="form-group" style="max-width:150px;">
+                <label class="form-label">Порядок</label>
+                <input type="number" name="topic_order" class="form-control" value="{{ topic.order }}">
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p id="no-topics-msg" style="color:#8892b0; font-size:0.9rem; margin:0;">Нет тем. Нажмите «Добавить тему».</p>
+        {% endif %}
+    </div>
+
+    <!-- ======================== -->
+    <!-- ВОПРОСЫ                  -->
+    <!-- ======================== -->
+    <div class="section-divider" style="margin-top:2rem;">
+        <h3>❓ Вопросы</h3>
+        <button type="button" class="btn btn-sm btn-outline" onclick="addQuestionBlock()">+ Добавить вопрос</button>
+    </div>
+    <div id="questions-container">
+        {% if lesson and lesson.questions %}
+        {% for q in lesson.questions %}
+        <div class="question-block">
+            <div class="topic-header">
+                <span>Вопрос {{ loop.index }}</span>
+                <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.question-block').remove(); updateQuestionNumbers();">✕</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Текст вопроса</label>
+                <input type="text" name="question_text" class="form-control" value="{{ q.text }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Варианты ответов (JSON-массив)</label>
+                <input type="text" name="question_options" class="form-control" value="{{ q.options }}" placeholder='["Ответ 1", "Ответ 2", "Ответ 3"]'>
+            </div>
+            <div class="form-row">
+                <div class="form-group form-half">
+                    <label class="form-label">Правильный ответ (индекс)</label>
+                    <input type="number" name="question_correct_answer" class="form-control" value="{{ q.correct_answer }}" min="0">
+                </div>
+                <div class="form-group form-half">
+                    <label class="form-label">Порядок</label>
+                    <input type="number" name="question_order" class="form-control" value="{{ q.order }}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Объяснение</label>
+                <textarea name="question_explanation" class="form-control tinymce" rows="2">{{ q.explanation }}</textarea>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p id="no-questions-msg" style="color:#8892b0; font-size:0.9rem; margin:0;">Нет вопросов. Нажмите «Добавить вопрос».</p>
+        {% endif %}
+    </div>
+
+    <div class="form-actions" style="margin-top:2rem;">
+        <button type="submit" class="btn btn-primary">
+            {% if lesson %}Сохранить изменения{% else %}Создать урок{% endif %}
+        </button>
+        <a href="{{ url_for('admin.admin_lessons') }}" class="btn btn-outline">Отмена</a>
+    </div>
+</form>
+
+<script>
+let topicCounter = {{ lesson.topics|length if lesson and lesson.topics else 0 }};
+let questionCounter = {{ lesson.questions|length if lesson and lesson.questions else 0 }};
+
+function addTopicBlock() {
+    topicCounter++;
+    const msg = document.getElementById('no-topics-msg');
+    if (msg) msg.remove();
+
+    const container = document.getElementById('topics-container');
+    const block = document.createElement('div');
+    block.className = 'topic-block';
+    block.innerHTML = `
+        <div class="topic-header">
+            <span>Тема ${topicCounter}</span>
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.topic-block').remove(); updateTopicNumbers();">✕</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Название темы</label>
+            <input type="text" name="topic_title" class="form-control" value="">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Содержание</label>
+            <textarea name="topic_content" class="form-control tinymce" rows="3"></textarea>
+        </div>
+        <div class="form-group" style="max-width:150px;">
+            <label class="form-label">Порядок</label>
+            <input type="number" name="topic_order" class="form-control" value="0">
+        </div>
+    `;
+    container.appendChild(block);
+
+    // Initialize TinyMCE on the newly created textarea
+    const newTextarea = block.querySelector('textarea.tinymce');
+    if (newTextarea && typeof tinymce !== 'undefined') {
+        tinymce.init({
+            target: newTextarea,
+            language: 'ru',
+            plugins: 'link lists code',
+            toolbar: 'undo redo | bold italic underline strikethrough | bullist numlist | link unlink | code',
+            menubar: false,
+            statusbar: false,
+            height: 200,
+            branding: false,
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: #ccd6f6; background: #0a192f; }',
+            skin: 'oxide-dark',
+            content_css: 'dark',
+            setup: function(editor) {
+                editor.on('change', function() {
+                    editor.save();
+                });
+            }
+        });
+    }
+}
+
+function updateTopicNumbers() {
+    const blocks = document.querySelectorAll('#topics-container .topic-block');
+    if (blocks.length === 0) {
+        topicCounter = 0;
+        const container = document.getElementById('topics-container');
+        container.innerHTML = '<p id="no-topics-msg" style="color:#8892b0; font-size:0.9rem; margin:0;">Нет тем. Нажмите «Добавить тему».</p>';
+        return;
+    }
+    blocks.forEach((block, idx) => {
+        block.querySelector('.topic-header span').textContent = 'Тема ' + (idx + 1);
+    });
+    topicCounter = blocks.length;
+}
+
+function addQuestionBlock() {
+    questionCounter++;
+    const msg = document.getElementById('no-questions-msg');
+    if (msg) msg.remove();
+
+    const container = document.getElementById('questions-container');
+    const block = document.createElement('div');
+    block.className = 'question-block';
+    block.innerHTML = `
+        <div class="topic-header">
+            <span>Вопрос ${questionCounter}</span>
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.question-block').remove(); updateQuestionNumbers();">✕</button>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Текст вопроса</label>
+            <input type="text" name="question_text" class="form-control" value="">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Варианты ответов (JSON-массив)</label>
+            <input type="text" name="question_options" class="form-control" value="" placeholder='["Ответ 1", "Ответ 2", "Ответ 3"]'>
+        </div>
+        <div class="form-row">
+            <div class="form-group form-half">
+                <label class="form-label">Правильный ответ (индекс)</label>
+                <input type="number" name="question_correct_answer" class="form-control" value="0" min="0">
+            </div>
+            <div class="form-group form-half">
+                <label class="form-label">Порядок</label>
+                <input type="number" name="question_order" class="form-control" value="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Объяснение</label>
+            <textarea name="question_explanation" class="form-control tinymce" rows="2"></textarea>
+        </div>
+    `;
+    container.appendChild(block);
+
+    // Initialize TinyMCE on the newly created textarea
+    const newTextarea = block.querySelector('textarea.tinymce');
+    if (newTextarea && typeof tinymce !== 'undefined') {
+        tinymce.init({
+            target: newTextarea,
+            language: 'ru',
+            plugins: 'link lists code',
+            toolbar: 'undo redo | bold italic underline strikethrough | bullist numlist | link unlink | code',
+            menubar: false,
+            statusbar: false,
+            height: 200,
+            branding: false,
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: #ccd6f6; background: #0a192f; }',
+            skin: 'oxide-dark',
+            content_css: 'dark',
+            setup: function(editor) {
+                editor.on('change', function() {
+                    editor.save();
+                });
+            }
+        });
+    }
+}
+
+function updateQuestionNumbers() {
+    const blocks = document.querySelectorAll('#questions-container .question-block');
+    if (blocks.length === 0) {
+        questionCounter = 0;
+        const container = document.getElementById('questions-container');
+        container.innerHTML = '<p id="no-questions-msg" style="color:#8892b0; font-size:0.9rem; margin:0;">Нет вопросов. Нажмите «Добавить вопрос».</p>';
+        return;
+    }
+    blocks.forEach((block, idx) => {
+        block.querySelector('.topic-header span').textContent = 'Вопрос ' + (idx + 1);
+    });
+    questionCounter = blocks.length;
+}
+</script>
+
+<style>
+.section-divider {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 1.2rem;
+    margin-top: 1.5rem;
+}
+.section-divider h3 {
+    margin: 0;
+    color: #ccd6f6;
+}
+.topic-block, .question-block {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-top: 0.8rem;
+}
+.topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    color: #8892b0;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

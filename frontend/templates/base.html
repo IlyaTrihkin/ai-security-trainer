@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI Security Trainer{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head_extra %}{% endblock %}
 </head>
 <body>
 
@@ -29,6 +30,11 @@
                 <a href="{{ url_for('main.profile') }}" class="{% if request.endpoint == 'main.profile' %}active{% endif %}">
                     <span class="icon">👤</span><span>Профиль</span>
                 </a>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('admin.admin_index') }}" class="{% if request.endpoint and request.endpoint.startswith('admin.') %}active{% endif %}">
+                    <span class="icon">⚙️</span><span>Админка</span>
+                </a>
+                {% endif %}
             {% else %}
                 <a href="/skills" class="{% if request.endpoint == 'main.skills' %}active{% endif %}">
                     <span class="icon">🛡️</span><span>Навыки</span>
@@ -122,6 +128,8 @@
     <div id="robotContainer">
         <span style="font-size: 32px;">🤖</span>
     </div>
+
+    {% block content_scripts %}{% endblock %}
 
     <script>
         // Управление чатом

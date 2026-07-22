@@ -1,3 +1,5 @@
+import json
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -284,6 +286,7 @@ def skills():
 def lesson(lesson_id):
     lesson = Lesson.query.get_or_404(lesson_id)
     topics = Topic.query.filter_by(lesson_id=lesson_id).order_by(Topic.order).all()
+    questions = Question.query.filter_by(lesson_id=lesson_id).order_by(Question.order).all()
 
     progress = UserProgress.query.filter_by(
         user_id=current_user.id, lesson_id=lesson_id, completed=True
@@ -292,39 +295,119 @@ def lesson(lesson_id):
         flash('Вы уже прошли этот урок!', 'info')
         return redirect(url_for('main.skills'))
 
-    # XP за прохождение: 10 XP за каждый вопрос
-    total_xp = len(topics) * 10
+    # Сериализация данных для JSON-передачи в JavaScript
+    topics_data = [{'id': t.id, 'title': t.title, 'content': t.content, 'question': t.question, 'order': t.order} for t in topics]
+    questions_data = [{'id': q.id, 'text': q.text, 'options': q.options, 'correct_answer': q.correct_answer, 'explanation': q.explanation} for q in questions]
+    lesson_data = {'id': lesson.id, 'title': lesson.title, 'description': lesson.description, 'difficulty': lesson.difficulty, 'xp_reward': lesson.xp_reward}
 
-    return render_template('lesson.html', lesson=lesson, topics=topics, total_xp=total_xp, user=current_user)
+    # XP за прохождение: 10 XP за каждый вопрос
+    total_xp = (len(topics) + len(questions)) * 10
+
+    # Ищем следующий урок
+    next_lesson = Lesson.query.filter(
+        Lesson.skill_id == lesson.skill_id,
+        Lesson.order > lesson.order
+    ).order_by(Lesson.order).first()
+
+    if not next_lesson:
+        current_skill = Skill.query.get(lesson.skill_id)
+        if current_skill:
+            next_skill = Skill.query.filter(
+                Skill.order > current_skill.order
+            ).order_by(Skill.order).first()
+            if next_skill:
+                next_lesson = Lesson.query.filter_by(
+                    skill_id=next_skill.id
+                ).order_by(Lesson.order).first()
+
+    return render_template('lesson.html', lesson=lesson, topics=topics, questions=questions, topics_data=topics_data, questions_data=questions_data, lesson_data=lesson_data, total_xp=total_xp, next_lesson=next_lesson, user=current_user)
 
 @bp.route('/submit/<int:lesson_id>', methods=['POST'])
 @login_required
 def submit_lesson(lesson_id):
     lesson = Lesson.query.get_or_404(lesson_id)
     topics = Topic.query.filter_by(lesson_id=lesson_id).order_by(Topic.order).all()
+    questions = Question.query.filter_by(lesson_id=lesson_id).order_by(Question.order).all()
 
     # Проверяем, не пройден ли уже урок
     existing = UserProgress.query.filter_by(
         user_id=current_user.id, lesson_id=lesson_id, completed=True
     ).first()
     if existing:
-        flash('Вы уже прошли этот урок!', 'info')
-        return redirect(url_for('main.skills'))
+        return jsonify({'success': False, 'message': 'Вы уже прошли этот урок!', 'redirect': url_for('main.skills')}), 400
 
-    # Сбор ответов (ключи: question_<id>)
+    # Определяем источник данных: JSON или form-data
+    if request.is_json:
+        data = request.get_json()
+        answers_list = data.get('answers', [])
+        # Сохраняем весь объект ответа ({question_id, selected, correct}), а не только selected
+        answers = {a['question_id']: a for a in answers_list}
+        is_json = True
+    else:
+        answers = request.form
+        is_json = False
+
+    # Сбор ответов: темы (ключи: question_<id>)
     correct_count = 0
+    total_questions = 0
     for topic in topics:
-        user_ans = request.form.get(f'question_{topic.id}')
+        if not topic.question or not topic.question.get('text'):
+            continue
+        total_questions += 1
+        key = f'question_{topic.id}'
+        ans_data = answers.get(key) if is_json else answers.get(key)
+        user_ans = ans_data if not is_json else (ans_data.get('selected') if isinstance(ans_data, dict) else ans_data)
         correct_ans = topic.question.get('correct')
-        if user_ans is not None:
-            try:
-                user_ans = int(user_ans)
-            except (ValueError, TypeError):
-                user_ans = None
-        if user_ans == correct_ans:
-            correct_count += 1
 
-    total_questions = len(topics)
+        # Определяем, открытый ли это вопрос (нет вариантов ответа)
+        question_opts = topic.question.get('options', [])
+        is_open = not question_opts or len(question_opts) == 0
+
+        if is_open:
+            # Открытый вопрос — используем флаг correct из фронтенда (проверка по ключевым словам)
+            frontend_correct = ans_data.get('correct', 0) if isinstance(ans_data, dict) else 0
+            if frontend_correct == 1:
+                correct_count += 1
+        else:
+            # Закрытый вопрос — сравниваем индекс ответа с правильным индексом
+            if not is_json and user_ans is not None:
+                try:
+                    user_ans = int(user_ans)
+                except (ValueError, TypeError):
+                    user_ans = None
+            if user_ans == correct_ans:
+                correct_count += 1
+
+    # Сбор ответов: вопросы (ключи: q_<id>)
+    for q in questions:
+        total_questions += 1
+        key = f'q_{q.id}'
+        ans_data = answers.get(key) if is_json else answers.get(key)
+        user_ans = ans_data if not is_json else (ans_data.get('selected') if isinstance(ans_data, dict) else ans_data)
+        correct_ans = q.correct_answer
+
+        # Определяем, открытый ли это вопрос
+        try:
+            q_opts = json.loads(q.options) if isinstance(q.options, str) else (q.options or [])
+        except Exception:
+            q_opts = []
+        is_open = not q_opts or len(q_opts) == 0
+
+        if is_open:
+            # Открытый вопрос — используем флаг correct из фронтенда
+            frontend_correct = ans_data.get('correct', 0) if isinstance(ans_data, dict) else 0
+            if frontend_correct == 1:
+                correct_count += 1
+        else:
+            # Закрытый вопрос
+            if not is_json and user_ans is not None:
+                try:
+                    user_ans = int(user_ans)
+                except (ValueError, TypeError):
+                    user_ans = None
+            if user_ans == correct_ans:
+                correct_count += 1
+
     percentage = int((correct_count / total_questions) * 100) if total_questions > 0 else 0
 
     # Порог 70% для начисления XP
@@ -343,21 +426,38 @@ def submit_lesson(lesson_id):
     db.session.add(progress)
 
     # Начисляем XP пользователю (только если порог пройден)
+    level_up = False
+    new_level = current_user.level
     if xp_reward > 0:
         current_user.xp += xp_reward
         new_level = (current_user.xp // 50) + 1
         if new_level > current_user.level:
             current_user.level = new_level
-            flash(f'🎉 Поздравляем! Вы достигли {new_level} уровня!', 'success')
+            level_up = True
 
     db.session.commit()
 
     # Проверка достижений
     new_achievements = check_achievements(current_user)
+
+    if is_json:
+        return jsonify({
+            'success': True,
+            'correct_count': correct_count,
+            'total_questions': total_questions,
+            'percentage': percentage,
+            'xp_earned': xp_reward,
+            'level_up': level_up,
+            'new_level': new_level,
+            'achievements': [{'name': a, 'description': ''} for a in new_achievements] if new_achievements else []
+        })
+
+    # Для form-data — старый путь с редиректом
     if new_achievements:
         flash('🏆 Вы получили новое достижение!', 'success')
+    if level_up:
+        flash(f'🎉 Поздравляем! Вы достигли {new_level} уровня!', 'success')
 
-    # Перенаправление на страницу результата
     return redirect(url_for('main.result', lesson_id=lesson.id))
 
 @bp.route('/result/<int:lesson_id>')
@@ -375,7 +475,8 @@ def result(lesson_id):
         return redirect(url_for('main.lesson', lesson_id=lesson_id))
 
     topics = Topic.query.filter_by(lesson_id=lesson_id).all()
-    total_questions = len(topics)
+    questions = Question.query.filter_by(lesson_id=lesson_id).all()
+    total_questions = len(topics) + len(questions)
     percentage = int((progress.score / total_questions) * 100) if total_questions > 0 else 0
 
     # Ищем достижения, полученные после прохождения этого урока

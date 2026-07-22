@@ -1,0 +1,40 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<div class="admin-header-row">
+    <h2>📥 Импорт уроков из JSON</h2>
+    <a href="{{ url_for('admin.admin_lessons') }}" class="btn btn-outline">← Назад к списку</a>
+</div>
+
+<div class="card" style="padding: 24px;">
+    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        Вставьте JSON с уроками в поле ниже. Поддерживаются форматы:
+    </p>
+    <ul style="color: var(--text-secondary); margin-bottom: 16px; padding-left: 20px;">
+        <li>Объект с ключом <code>"lessons"</code> → массив уроков</li>
+        <li>Массив объектов уроков</li>
+        <li>Одиночный объект урока</li>
+    </ul>
+    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        Каждый урок должен содержать <strong>title</strong>, <strong>skill_id</strong>, и опционально — <code>topics</code> и <code>questions</code>.
+        Если урок с таким же названием и skill_id уже существует — он будет обновлён.
+    </p>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="json_data" style="font-weight: 600; display: block; margin-bottom: 8px;">JSON-данные:</label>
+            <textarea
+                id="json_data"
+                name="json_data"
+                rows="20"
+                placeholder='{"lessons": [{"title": "Пример", "skill_id": 1, "topics": [...], "questions": [...]}]}'
+                style="width: 100%; font-family: monospace; font-size: 14px; padding: 12px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: var(--radius); resize: vertical;"
+                required
+            ></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 12px;">
+            📥 Импортировать
+        </button>
+    </form>
+</div>
+{% endblock %}

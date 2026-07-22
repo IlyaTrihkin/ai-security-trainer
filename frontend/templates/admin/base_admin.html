@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель — AI Security Trainer{% endblock %}
+
+{% block head_extra %}
+<!-- TinyMCE WYSIWYG Editor (self-hosted, MIT license) -->
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    tinymce.init({
+        selector: 'textarea.tinymce',
+        language: 'ru',
+        plugins: 'link lists code',
+        toolbar: 'undo redo | bold italic underline strikethrough | bullist numlist | link unlink | code',
+        menubar: false,
+        statusbar: false,
+        height: 300,
+        branding: false,
+        content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 14px; color: #ccd6f6; background: #0a192f; }',
+        skin: 'oxide-dark',
+        content_css: 'dark',
+        setup: function(editor) {
+            editor.on('change', function() {
+                editor.save(); // sync content back to textarea
+            });
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1 class="admin-title">🛡️ Админ-панель</h1>
+    <p class="admin-subtitle">Управление платформой AI Security Trainer</p>
+
+    <nav class="admin-nav">
+        <a href="{{ url_for('admin.admin_index') }}" class="admin-nav-item {% if request.endpoint == 'admin.admin_index' %}active{% endif %}">
+            <span class="icon">📊</span>
+            <span>Главная</span>
+        </a>
+        <a href="{{ url_for('admin.admin_users') }}" class="admin-nav-item {% if request.endpoint == 'admin.admin_users' %}active{% endif %}">
+            <span class="icon">👥</span>
+            <span>Пользователи</span>
+        </a>
+        <a href="{{ url_for('admin.admin_skills') }}" class="admin-nav-item {% if request.endpoint in ('admin.admin_skills', 'admin.create_skill', 'admin.edit_skill') %}active{% endif %}">
+            <span class="icon">🛡️</span>
+            <span>Навыки</span>
+        </a>
+        <a href="{{ url_for('admin.admin_lessons') }}" class="admin-nav-item {% if request.endpoint in ('admin.admin_lessons', 'admin.create_lesson', 'admin.edit_lesson', 'admin.import_lessons') %}active{% endif %}">
+            <span class="icon">📚</span>
+            <span>Уроки</span>
+        </a>
+        <a href="#" class="admin-nav-item">
+            <span class="icon">🏆</span>
+            <span>Достижения</span>
+        </a>
+    </nav>
+
+    <div class="admin-content">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

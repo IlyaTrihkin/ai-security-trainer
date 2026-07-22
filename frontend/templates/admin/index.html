@@ -1,0 +1,28 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<h2>Общая статистика</h2>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">{{ stats.users }}</div>
+        <div class="stat-label">Пользователей</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-value">{{ stats.skills }}</div>
+        <div class="stat-label">Навыков</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-value">{{ stats.lessons }}</div>
+        <div class="stat-label">Уроков</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value">{{ stats.achievements }}</div>
+        <div class="stat-label">Достижений</div>
+    </div>
+</div>
+{% endblock %}

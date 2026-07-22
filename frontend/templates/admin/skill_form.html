@@ -1,0 +1,50 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<h2>{% if skill %}Редактировать навык{% else %}Новый навык{% endif %}</h2>
+
+<form method="POST" class="admin-form">
+    <div class="form-group">
+        <label for="title" class="form-label">Название</label>
+        <input type="text" id="title" name="title" class="form-control" value="{{ skill.title if skill else '' }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description" class="form-label">Описание</label>
+        <textarea id="description" name="description" class="form-control" rows="4">{{ skill.description if skill else '' }}</textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="difficulty" class="form-label">Уровень (difficulty)</label>
+            <select id="difficulty" name="difficulty" class="form-control">
+                <option value="beginner" {% if skill and skill.difficulty == 'beginner' %}selected{% endif %}>beginner</option>
+                <option value="intermediate" {% if skill and skill.difficulty == 'intermediate' %}selected{% endif %}>intermediate</option>
+                <option value="advanced" {% if skill and skill.difficulty == 'advanced' %}selected{% endif %}>advanced</option>
+            </select>
+        </div>
+        <div class="form-group form-half">
+            <label for="icon" class="form-label">Иконка (emoji / FA класс)</label>
+            <input type="text" id="icon" name="icon" class="form-control" value="{{ skill.icon if skill else '🔐' }}">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="order" class="form-label">Порядок сортировки</label>
+            <input type="number" id="order" name="order" class="form-control" value="{{ skill.order if skill else 0 }}">
+        </div>
+        <div class="form-group form-half">
+            <label for="parent_skill_id" class="form-label">ID родительского навыка (опц.)</label>
+            <input type="number" id="parent_skill_id" name="parent_skill_id" class="form-control" value="{{ skill.parent_skill_id if skill else '' }}" placeholder="Оставьте пустым, если нет">
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if skill %}Сохранить изменения{% else %}Создать навык{% endif %}
+        </button>
+        <a href="{{ url_for('admin.admin_skills') }}" class="btn btn-outline">Отмена</a>
+    </div>
+</form>
+{% endblock %}

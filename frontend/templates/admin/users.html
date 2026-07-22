@@ -1,0 +1,83 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<div class="admin-header-row">
+    <h2>👥 Пользователи</h2>
+</div>
+
+<div class="admin-search-bar">
+    <form method="GET" action="{{ url_for('admin.admin_users') }}" style="display: flex; gap: 8px; width: 100%; max-width: 500px;">
+        <input type="text" name="search" class="form-control" placeholder="Поиск по имени или email..." value="{{ search }}">
+        <button type="submit" class="btn btn-primary">🔍 Найти</button>
+        {% if search %}
+            <a href="{{ url_for('admin.admin_users') }}" class="btn btn-outline">✕ Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if not users %}
+<div class="empty-state">
+    <p>{% if search %}Ничего не найдено по запросу «{{ search }}».{% else %}Пользователей пока нет.{% endif %}</p>
+</div>
+{% else %}
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя</th>
+            <th>Email</th>
+            <th>Активен</th>
+            <th>Админ</th>
+            <th>Дата регистрации</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>
+                <strong>{{ user.username }}</strong>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>
+                <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                    {{ 'Да' if user.is_active else 'Нет' }}
+                </span>
+            </td>
+            <td>
+                <span class="status-badge {% if user.is_admin %}status-active{% else %}status-inactive{% endif %}">
+                    {{ 'Да' if user.is_admin else 'Нет' }}
+                </span>
+            </td>
+            <td>{{ user.created_at.strftime('%d.%m.%Y') }}</td>
+            <td class="actions-cell">
+                <form method="POST" action="{{ url_for('admin.toggle_active', user_id=user.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm {% if user.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                        {{ 'Заблокировать' if user.is_active else 'Разблокировать' }}
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm {% if user.is_admin %}btn-outline{% else %}btn-primary{% endif %}">
+                        {{ 'Убрать права' if user.is_admin else 'Сделать админом' }}
+                    </button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if pagination.pages > 1 %}
+<nav class="pagination-nav">
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('admin.admin_users', page=pagination.prev_num, search=search) }}" class="btn btn-sm btn-outline">&laquo; Назад</a>
+    {% endif %}
+    <span class="page-info">Страница {{ pagination.page }} из {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+        <a href="{{ url_for('admin.admin_users', page=pagination.next_num, search=search) }}" class="btn btn-sm btn-outline">Вперёд &raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

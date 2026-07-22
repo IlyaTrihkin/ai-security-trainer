@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 import os
+import json
 from dotenv import load_dotenv
 
 basedir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,6 +24,16 @@ def create_app():
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    # Jinja2-фильтр: парсинг JSON
+    @app.template_filter('from_json')
+    def from_json_filter(value):
+        if not value:
+            return []
+        try:
+            return json.loads(value)
+        except (json.JSONDecodeError, TypeError):
+            return []
+
     db.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'main.login'
@@ -32,6 +43,9 @@ def create_app():
     from . import models
     from .routes import bp as main_bp
     app.register_blueprint(main_bp)
+
+    from .admin import admin_bp
+    app.register_blueprint(admin_bp)
 
     return app
 

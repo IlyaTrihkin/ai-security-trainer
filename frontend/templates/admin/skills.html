@@ -1,0 +1,66 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<div class="admin-header-row">
+    <h2>🛡️ Навыки</h2>
+    <a href="{{ url_for('admin.create_skill') }}" class="btn btn-primary">+ Новый навык</a>
+</div>
+
+<div class="admin-search-bar">
+    <form method="GET" action="{{ url_for('admin.admin_skills') }}" style="display: flex; gap: 8px; width: 100%; max-width: 500px;">
+        <input type="text" name="search" class="form-control" placeholder="Поиск по названию или описанию..." value="{{ search }}">
+        <button type="submit" class="btn btn-primary">🔍 Найти</button>
+        {% if search %}
+            <a href="{{ url_for('admin.admin_skills') }}" class="btn btn-outline">✕ Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if not skills %}
+<div class="empty-state">
+    <p>{% if search %}Ничего не найдено по запросу «{{ search }}».{% else %}Навыков пока нет.{% endif %}</p>
+</div>
+{% else %}
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Название</th>
+            <th>Уровень</th>
+            <th>Иконка</th>
+            <th>Описание</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for skill in skills %}
+        <tr>
+            <td>{{ skill.id }}</td>
+            <td><strong>{{ skill.title }}</strong></td>
+            <td>{{ skill.difficulty }}</td>
+            <td>{{ skill.icon }}</td>
+            <td class="desc-cell">{{ skill.description[:80] }}{% if skill.description|length > 80 %}...{% endif %}</td>
+            <td class="actions-cell">
+                <a href="{{ url_for('admin.edit_skill', skill_id=skill.id) }}" class="btn btn-sm btn-outline">Редактировать</a>
+                <form method="POST" action="{{ url_for('admin.delete_skill', skill_id=skill.id) }}" style="display:inline;" onsubmit="return confirm('Удалить навык «{{ skill.title }}»? Это действие необратимо.')">
+                    <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if pagination.pages > 1 %}
+<nav class="pagination-nav">
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('admin.admin_skills', page=pagination.prev_num, search=search) }}" class="btn btn-sm btn-outline">&laquo; Назад</a>
+    {% endif %}
+    <span class="page-info">Страница {{ pagination.page }} из {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+        <a href="{{ url_for('admin.admin_skills', page=pagination.next_num, search=search) }}" class="btn btn-sm btn-outline">Вперёд &raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

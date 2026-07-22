@@ -8,6 +8,8 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     avatar = db.Column(db.String(200), nullable=True)
+    is_admin = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
     level = db.Column(db.Integer, default=1)
     xp = db.Column(db.Integer, default=0)
     streak = db.Column(db.Integer, default=0)
@@ -31,11 +33,16 @@ class Skill(db.Model):
 class Lesson(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     skill_id = db.Column(db.Integer, db.ForeignKey('skill.id'), nullable=False)
-    title = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)  # описание урока (краткое)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    difficulty = db.Column(db.String(20), default='Начальный')
     xp_reward = db.Column(db.Integer, default=10)
+    duration_minutes = db.Column(db.Integer, default=30)
     order = db.Column(db.Integer, default=0)
+    homework_text = db.Column(db.Text)
+    practice_config = db.Column(db.JSON)
     topics = db.relationship('Topic', backref='lesson', lazy=True, cascade='all, delete-orphan')
+    questions = db.relationship('Question', backref='lesson', lazy=True, cascade='all, delete-orphan')
 
 class Topic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -47,12 +54,12 @@ class Topic(db.Model):
     order = db.Column(db.Integer, default=0)
 
 class Question(db.Model):
-    # Оставляем для обратной совместимости, но в новых уроках не используем
     id = db.Column(db.Integer, primary_key=True)
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
-    type = db.Column(db.String(20), nullable=False)
-    data = db.Column(db.JSON, nullable=False)
-    points = db.Column(db.Integer, default=10)
+    text = db.Column(db.Text, nullable=False)
+    options = db.Column(db.Text)  # JSON-строка с вариантами ответов
+    correct_answer = db.Column(db.Integer, default=0)
+    explanation = db.Column(db.Text)
     order = db.Column(db.Integer, default=0)
 
 class UserProgress(db.Model):

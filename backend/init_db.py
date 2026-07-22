@@ -9,7 +9,8 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app import create_app, db
-from app.models import Skill, Lesson, Topic, Achievement
+from app.models import Skill, Lesson, Topic, Achievement, User
+from werkzeug.security import generate_password_hash
 
 app = create_app()
 
@@ -20,6 +21,26 @@ def load_json(file_path):
 with app.app_context():
     db.drop_all()
     db.create_all()
+
+    # 0. Создаём первого администратора, если пользователей ещё нет
+    if User.query.count() == 0:
+        admin = User(
+            username='admin',
+            email='admin@ai-security.local',
+            password_hash=generate_password_hash('admin123'),
+            is_admin=True,
+            is_active=True,
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("=" * 60)
+        print("⚠️  СОЗДАН ПЕРВЫЙ АДМИНИСТРАТОР:")
+        print("   Логин:    admin")
+        print("   Пароль:   admin123")
+        print("   СМЕНИТЕ ПАРОЛЬ ПОСЛЕ ПЕРВОГО ВХОДА!")
+        print("=" * 60)
+    else:
+        print("ℹ️  Пользователи уже существуют, администратор не создавался.")
 
     # 1. Скиллы
     skills_data = load_json('data/skills.json')
