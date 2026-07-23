@@ -1,0 +1,40 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<div class="admin-header-row">
+    <h2>📥 Импорт достижений из JSON</h2>
+    <a href="{{ url_for('admin.admin_achievements') }}" class="btn btn-outline">← Назад к списку</a>
+</div>
+
+<div class="card" style="padding: 24px;">
+    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        Вставьте JSON с достижениями в поле ниже. Поддерживаются форматы:
+    </p>
+    <ul style="color: var(--text-secondary); margin-bottom: 16px; padding-left: 20px;">
+        <li>Объект с ключом <code>"achievements"</code> → массив достижений</li>
+        <li>Массив объектов достижений</li>
+        <li>Одиночный объект достижения</li>
+    </ul>
+    <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        Каждое достижение должно содержать <strong>name</strong>, и опционально — <code>description</code>, <code>icon</code>, <code>condition_type</code>, <code>condition_value</code>, <code>xp_reward</code>.
+        Если достижение с таким же названием уже существует — оно будет обновлено.
+    </p>
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="json_data" style="font-weight: 600; display: block; margin-bottom: 8px;">JSON-данные:</label>
+            <textarea
+                id="json_data"
+                name="json_data"
+                rows="20"
+                placeholder='{"achievements": [{"name": "Первые шаги", "description": "Пройдите первый урок", "icon": "🎯", "condition_type": "lessons_completed", "condition_value": 1, "xp_reward": 50}]}'
+                style="width: 100%; font-family: monospace; font-size: 14px; padding: 12px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: var(--radius); resize: vertical;"
+                required
+            ></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top: 12px;">
+            📥 Импортировать
+        </button>
+    </form>
+</div>
+{% endblock %}

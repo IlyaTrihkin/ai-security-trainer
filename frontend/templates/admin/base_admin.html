@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="icon">📚</span>
             <span>Уроки</span>
         </a>
-        <a href="#" class="admin-nav-item">
+        <a href="{{ url_for('admin.admin_achievements') }}" class="admin-nav-item {% if request.endpoint in ('admin.admin_achievements', 'admin.create_achievement', 'admin.edit_achievement', 'admin.import_achievements') %}active{% endif %}">
             <span class="icon">🏆</span>
             <span>Достижения</span>
         </a>

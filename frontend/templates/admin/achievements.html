@@ -1,0 +1,73 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<div class="admin-header-row">
+    <h2>🏆 Достижения</h2>
+    <div class="admin-header-actions">
+        <a href="{{ url_for('admin.create_achievement') }}" class="btn btn-primary">+ Новое достижение</a>
+        <a href="{{ url_for('admin.import_achievements') }}" class="btn btn-outline">📥 Импорт JSON</a>
+        <a href="{{ url_for('admin.export_all_achievements') }}" class="btn btn-outline">📤 Экспорт JSON</a>
+    </div>
+</div>
+
+<div class="admin-search-bar">
+    <form method="GET" action="{{ url_for('admin.admin_achievements') }}" style="display: flex; gap: 8px; width: 100%; max-width: 500px;">
+        <input type="text" name="search" class="form-control" placeholder="Поиск по названию или описанию..." value="{{ search }}">
+        <button type="submit" class="btn btn-primary">🔍 Найти</button>
+        {% if search %}
+            <a href="{{ url_for('admin.admin_achievements') }}" class="btn btn-outline">✕ Сбросить</a>
+        {% endif %}
+    </form>
+</div>
+
+{% if not achievements %}
+<div class="empty-state">
+    <p>{% if search %}Ничего не найдено по запросу «{{ search }}».{% else %}Достижений пока нет.{% endif %}</p>
+</div>
+{% else %}
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Иконка</th>
+            <th>Название</th>
+            <th>Условие</th>
+            <th>XP</th>
+            <th>Описание</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ach in achievements %}
+        <tr>
+            <td>{{ ach.id }}</td>
+            <td>{{ ach.icon }}</td>
+            <td><strong>{{ ach.name }}</strong></td>
+            <td>{{ ach.condition_type }} &ge; {{ ach.condition_value }}</td>
+            <td>{{ ach.xp_reward }}</td>
+            <td class="desc-cell">{{ ach.description[:80] }}{% if ach.description|length > 80 %}...{% endif %}</td>
+            <td class="actions-cell">
+                <a href="{{ url_for('admin.edit_achievement', achievement_id=ach.id) }}" class="btn btn-sm btn-outline">Редактировать</a>
+                <a href="{{ url_for('admin.export_achievement', achievement_id=ach.id) }}" class="btn btn-sm btn-outline">Экспорт</a>
+                <form method="POST" action="{{ url_for('admin.delete_achievement', achievement_id=ach.id) }}" style="display:inline;" onsubmit="return confirm('Удалить достижение «{{ ach.name }}»? Это действие необратимо.')">
+                    <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if pagination.pages > 1 %}
+<nav class="pagination-nav">
+    {% if pagination.has_prev %}
+        <a href="{{ url_for('admin.admin_achievements', page=pagination.prev_num, search=search) }}" class="btn btn-sm btn-outline">&laquo; Назад</a>
+    {% endif %}
+    <span class="page-info">Страница {{ pagination.page }} из {{ pagination.pages }}</span>
+    {% if pagination.has_next %}
+        <a href="{{ url_for('admin.admin_achievements', page=pagination.next_num, search=search) }}" class="btn btn-sm btn-outline">Вперёд &raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}

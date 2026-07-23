@@ -1,6 +1,6 @@
 from flask_login import current_user
 from . import db
-from .models import User, UserProgress, Achievement, UserAchievement
+from .models import User, UserProgress, Achievement, UserAchievement, Lesson
 from datetime import datetime, timedelta
 
 def check_achievements(user):

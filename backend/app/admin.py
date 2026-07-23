@@ -481,3 +481,223 @@ def delete_lesson(lesson_id):
     db.session.commit()
     flash(f'Урок "{title}" удалён.', 'success')
     return redirect(url_for('admin.admin_lessons'))
+
+
+# ========================
+# Достижения
+# ========================
+
+@admin_bp.route('/achievements')
+@login_required
+@admin_required
+def admin_achievements():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').strip()
+    query = Achievement.query
+    if search:
+        query = query.filter(
+            (Achievement.name.ilike(f'%{search}%')) |
+            (Achievement.description.ilike(f'%{search}%'))
+        )
+    achievements_pagination = query.order_by(Achievement.id).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    return render_template('admin/achievements.html', achievements=achievements_pagination.items, pagination=achievements_pagination, search=search)
+
+
+@admin_bp.route('/achievements/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_achievement():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        description = request.form.get('description', '').strip()
+        icon = request.form.get('icon', '🏆').strip()
+        condition_type = request.form.get('condition_type', '').strip()
+        condition_value = request.form.get('condition_value', 0, type=int)
+        xp_reward = request.form.get('xp_reward', 0, type=int)
+
+        if not name:
+            flash('Название достижения обязательно.', 'danger')
+            return render_template('admin/achievement_form.html', achievement=None)
+
+        achievement = Achievement(
+            name=name,
+            description=description,
+            icon=icon,
+            condition_type=condition_type,
+            condition_value=condition_value,
+            xp_reward=xp_reward,
+        )
+        db.session.add(achievement)
+        db.session.commit()
+        flash(f'Достижение "{name}" создано.', 'success')
+        return redirect(url_for('admin.admin_achievements'))
+    return render_template('admin/achievement_form.html', achievement=None)
+
+
+@admin_bp.route('/achievements/<int:achievement_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_achievement(achievement_id):
+    achievement = Achievement.query.get_or_404(achievement_id)
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Название достижения обязательно.', 'danger')
+            return render_template('admin/achievement_form.html', achievement=achievement)
+
+        achievement.name = name
+        achievement.description = request.form.get('description', '').strip()
+        achievement.icon = request.form.get('icon', '🏆').strip()
+        achievement.condition_type = request.form.get('condition_type', '').strip()
+        achievement.condition_value = request.form.get('condition_value', 0, type=int)
+        achievement.xp_reward = request.form.get('xp_reward', 0, type=int)
+
+        db.session.commit()
+        flash(f'Достижение "{name}" обновлено.', 'success')
+        return redirect(url_for('admin.admin_achievements'))
+    return render_template('admin/achievement_form.html', achievement=achievement)
+
+
+@admin_bp.route('/achievements/<int:achievement_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_achievement(achievement_id):
+    achievement = Achievement.query.get_or_404(achievement_id)
+    name = achievement.name
+    db.session.delete(achievement)
+    db.session.commit()
+    flash(f'Достижение "{name}" удалено.', 'success')
+    return redirect(url_for('admin.admin_achievements'))
+
+
+@admin_bp.route('/achievements/import', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def import_achievements():
+    if request.method == 'POST':
+        raw = request.form.get('json_data', '').strip()
+        if not raw:
+            flash('Поле JSON не может быть пустым.', 'danger')
+            return render_template('admin/achievements_import.html')
+
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as e:
+            flash(f'Ошибка парсинга JSON: {e}', 'danger')
+            return render_template('admin/achievements_import.html')
+
+        if isinstance(data, dict) and 'achievements' in data:
+            items = data['achievements']
+        elif isinstance(data, list):
+            items = data
+        elif isinstance(data, dict) and 'name' in data:
+            items = [data]
+        else:
+            flash('Неверный формат JSON. Ожидается объект с ключом "achievements", массив достижений или одиночный объект достижения.', 'danger')
+            return render_template('admin/achievements_import.html')
+
+        created = 0
+        updated = 0
+        errors = []
+
+        for ach_data in items:
+            name = ach_data.get('name', '').strip()
+            if not name:
+                errors.append(f'Пропущено достижение без названия')
+                continue
+
+            existing = Achievement.query.filter_by(name=name).first()
+            if existing:
+                existing.description = ach_data.get('description', '')
+                existing.icon = ach_data.get('icon', '🏆')
+                existing.condition_type = ach_data.get('condition_type')
+                existing.condition_value = ach_data.get('condition_value', 0)
+                existing.xp_reward = ach_data.get('xp_reward', 0)
+                updated += 1
+            else:
+                achievement = Achievement(
+                    name=name,
+                    description=ach_data.get('description', ''),
+                    icon=ach_data.get('icon', '🏆'),
+                    condition_type=ach_data.get('condition_type'),
+                    condition_value=ach_data.get('condition_value', 0),
+                    xp_reward=ach_data.get('xp_reward', 0),
+                )
+                db.session.add(achievement)
+                created += 1
+
+        db.session.commit()
+
+        msg_parts = []
+        if created > 0:
+            msg_parts.append(f'Создано достижений: {created}')
+        if updated > 0:
+            msg_parts.append(f'Обновлено достижений: {updated}')
+        if errors:
+            msg_parts.append(f'Ошибок: {len(errors)}')
+            for err in errors:
+                flash(err, 'warning')
+        if msg_parts:
+            flash(', '.join(msg_parts), 'success')
+        elif not errors:
+            flash('Не найдено достижений для импорта.', 'info')
+
+        return redirect(url_for('admin.admin_achievements'))
+
+    return render_template('admin/achievements_import.html')
+
+
+@admin_bp.route('/achievements/<int:achievement_id>/export')
+@login_required
+@admin_required
+def export_achievement(achievement_id):
+    achievement = Achievement.query.get_or_404(achievement_id)
+
+    data = {
+        'name': achievement.name,
+        'description': achievement.description,
+        'icon': achievement.icon,
+        'condition_type': achievement.condition_type,
+        'condition_value': achievement.condition_value,
+        'xp_reward': achievement.xp_reward,
+    }
+
+    json_str = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(
+        json_str,
+        mimetype='application/json',
+        headers={
+            'Content-Disposition': f'attachment; filename=achievement_{achievement_id}.json'
+        }
+    )
+
+
+@admin_bp.route('/achievements/export-all')
+@login_required
+@admin_required
+def export_all_achievements():
+    achievements = Achievement.query.order_by(Achievement.id).all()
+    data = {
+        'achievements': [
+            {
+                'name': a.name,
+                'description': a.description,
+                'icon': a.icon,
+                'condition_type': a.condition_type,
+                'condition_value': a.condition_value,
+                'xp_reward': a.xp_reward,
+            }
+            for a in achievements
+        ]
+    }
+
+    json_str = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(
+        json_str,
+        mimetype='application/json',
+        headers={
+            'Content-Disposition': 'attachment; filename=achievements.json'
+        }
+    )

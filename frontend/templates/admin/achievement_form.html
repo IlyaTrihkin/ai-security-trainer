@@ -1,0 +1,46 @@
+{% extends "admin/base_admin.html" %}
+
+{% block admin_content %}
+<h2>{% if achievement %}Редактировать достижение{% else %}Новое достижение{% endif %}</h2>
+
+<form method="POST" class="admin-form">
+    <div class="form-group">
+        <label for="name" class="form-label">Название</label>
+        <input type="text" id="name" name="name" class="form-control" value="{{ achievement.name if achievement else '' }}" required>
+    </div>
+
+    <div class="form-group">
+        <label for="description" class="form-label">Описание (Markdown)</label>
+        <textarea id="description" name="description" class="form-control" rows="4">{{ achievement.description if achievement else '' }}</textarea>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="icon" class="form-label">Иконка (emoji)</label>
+            <input type="text" id="icon" name="icon" class="form-control" value="{{ achievement.icon if achievement else '🏆' }}">
+        </div>
+        <div class="form-group form-half">
+            <label for="condition_type" class="form-label">Тип условия</label>
+            <input type="text" id="condition_type" name="condition_type" class="form-control" value="{{ achievement.condition_type if achievement else '' }}" placeholder="например: lessons_completed, xp_earned, streak">
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group form-half">
+            <label for="condition_value" class="form-label">Значение условия (число)</label>
+            <input type="number" id="condition_value" name="condition_value" class="form-control" value="{{ achievement.condition_value if achievement else 0 }}">
+        </div>
+        <div class="form-group form-half">
+            <label for="xp_reward" class="form-label">Бонус XP</label>
+            <input type="number" id="xp_reward" name="xp_reward" class="form-control" value="{{ achievement.xp_reward if achievement else 0 }}">
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if achievement %}Сохранить изменения{% else %}Создать достижение{% endif %}
+        </button>
+        <a href="{{ url_for('admin.admin_achievements') }}" class="btn btn-outline">Отмена</a>
+    </div>
+</form>
+{% endblock %}

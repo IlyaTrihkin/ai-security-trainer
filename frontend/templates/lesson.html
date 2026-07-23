@@ -4,93 +4,32 @@
 
 {% block head_extra %}
 <style>
-    /* ---- Контейнер урока ---- */
-    .lesson-container {
+    /* ---- Фон страницы ---- */
+    .lesson-page {
+        background: #0d1117;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+    }
+
+    /* ---- Карточка урока ---- */
+    .lesson-card {
+        background: rgba(22, 27, 44, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(74, 124, 247, 0.06);
         max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .lesson-header {
-        margin-bottom: 8px;
-    }
-
-    .lesson-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        color: var(--text-secondary);
-        text-decoration: none;
-        font-size: 13px;
-        margin-bottom: 16px;
-        transition: color 0.2s;
-    }
-    .lesson-back:hover {
-        color: var(--accent);
-    }
-
-    .lesson-title-row {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 8px;
-    }
-    .lesson-title-row h2 {
-        margin: 0;
-        font-size: 26px;
-    }
-    .lesson-meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
-        color: var(--text-secondary);
-        font-size: 13px;
-    }
-    .lesson-meta .badge {
-        font-size: 12px;
-        padding: 3px 10px;
-        background: var(--bg-secondary);
-        border-radius: 12px;
-        white-space: nowrap;
-    }
-    .lesson-meta .xp-badge {
-        color: var(--accent);
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    /* ---- Прогресс-бар ---- */
-    .progress-bar-wrap {
-        background: var(--bg-secondary);
-        border-radius: 20px;
-        height: 6px;
-        margin-bottom: 28px;
+        width: 100%;
+        padding: 0;
         overflow: hidden;
-    }
-    .progress-bar-fill {
-        height: 100%;
-        background: var(--accent);
-        border-radius: 20px;
-        transition: width 0.4s ease;
-    }
-    .progress-label {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-bottom: 6px;
+        animation: cardFadeIn 0.5s ease;
     }
 
-    /* ---- Лекция: блоки ---- */
-    .lecture-block {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        padding: 28px;
-        margin-bottom: 20px;
-        animation: fadeSlide 0.35s ease;
+    @keyframes cardFadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes fadeSlide {
@@ -98,97 +37,57 @@
         to   { opacity: 1; transform: translateX(0); }
     }
 
-    .lecture-block h3 {
-        margin: 0 0 16px 0;
-        font-size: 20px;
-    }
-
-    .lecture-block .content {
-        line-height: 1.75;
-        color: var(--text-primary);
-        font-size: 15px;
-    }
-
-    .lecture-block .content p {
-        margin: 0 0 12px 0;
-    }
-
-    .lecture-nav {
+    /* ---- Хедер карточки ---- */
+    .lesson-card-header {
         display: flex;
+        align-items: center;
         justify-content: space-between;
+        padding: 20px 28px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        gap: 16px;
+    }
+
+    .lesson-back-btn {
+        display: inline-flex;
         align-items: center;
-        margin-top: 20px;
+        gap: 6px;
+        color: #8b9bb5;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color 0.2s;
+        white-space: nowrap;
+    }
+    .lesson-back-btn:hover {
+        color: #e8edf5;
+    }
+    .lesson-back-btn svg {
+        width: 16px;
+        height: 16px;
     }
 
-    /* ---- Тест: один вопрос ---- */
-    .question-card-step {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        padding: 28px;
-        margin-bottom: 20px;
-        animation: fadeSlide 0.35s ease;
+    .lesson-step-indicator {
+        font-size: 13px;
+        color: #8b9bb5;
+        font-weight: 500;
+        text-align: center;
+        flex: 1;
     }
 
-    .question-number {
-        font-size: 12px;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .question-text {
-        font-size: 18px;
-        font-weight: 600;
-        margin: 0 0 20px 0;
-        line-height: 1.5;
-    }
-
-    .options-list {
+    .lesson-user-mini {
         display: flex;
-        flex-direction: column;
+        align-items: center;
         gap: 10px;
+        flex-shrink: 0;
     }
-
-    .option-btn {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 18px;
-        background: var(--bg-secondary);
-        border: 2px solid transparent;
-        border-radius: var(--radius);
-        color: var(--text-primary);
-        font-size: 15px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-align: left;
-        font-family: 'Inter', sans-serif;
+    .lesson-user-mini .mini-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid rgba(74, 124, 247, 0.4);
     }
-    .option-btn:hover:not(.disabled) {
-        background: rgba(74, 124, 247, 0.08);
-        border-color: var(--accent);
-    }
-    .option-btn.selected-correct {
-        background: rgba(46, 204, 113, 0.12);
-        border-color: var(--green);
-        color: var(--green);
-    }
-    .option-btn.selected-wrong {
-        background: rgba(231, 76, 60, 0.12);
-        border-color: var(--red);
-        color: var(--red);
-    }
-    .option-btn.correct-reveal {
-        background: rgba(46, 204, 113, 0.08);
-        border-color: var(--green);
-    }
-    .option-btn.disabled {
-        pointer-events: none;
-        opacity: 0.7;
-    }
-    .option-letter {
+    .lesson-user-mini .mini-avatar-placeholder {
         width: 32px;
         height: 32px;
         border-radius: 50%;
@@ -196,61 +95,292 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #4a7cf7;
+    }
+    .lesson-user-mini .mini-name {
+        font-size: 13px;
+        color: #e8edf5;
+        font-weight: 500;
+        display: none;
+    }
+
+    /* ---- Прогресс-бар ---- */
+    .lesson-progress-wrap {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        position: relative;
+    }
+    .lesson-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4a7cf7, #6c5ce7);
+        border-radius: 0 4px 4px 0;
+        transition: width 0.4s ease;
+    }
+
+    /* ---- Тело карточки ---- */
+    .lesson-card-body {
+        padding: 32px 28px;
+        min-height: 360px;
+    }
+
+    /* ---- Лекция ---- */
+    .lecture-block {
+        animation: fadeSlide 0.35s ease;
+    }
+    .lecture-block h3 {
+        margin: 0 0 16px 0;
+        font-size: 22px;
+        color: #e8edf5;
+        font-weight: 700;
+    }
+    .lecture-block .content {
+        line-height: 1.8;
+        color: #c8d2e0;
+        font-size: 15px;
+    }
+    .lecture-block .content p {
+        margin: 0 0 14px 0;
+    }
+    .lecture-block .content img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin: 12px 0;
+    }
+
+    /* ---- Тест ---- */
+    .question-block {
+        animation: fadeSlide 0.35s ease;
+    }
+    .question-number-label {
+        font-size: 11px;
+        color: #8b9bb5;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    .question-text {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 24px 0;
+        line-height: 1.5;
+        color: #e8edf5;
+    }
+    .question-text img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin: 12px 0;
+    }
+
+    /* ---- Варианты ответов ---- */
+    .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .option-btn {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 18px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: #c8d2e0;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+        font-family: 'Inter', sans-serif;
+        width: 100%;
+    }
+    .option-btn:hover:not(.disabled) {
+        background: rgba(74, 124, 247, 0.08);
+        border-color: rgba(74, 124, 247, 0.4);
+    }
+    .option-btn.selected-correct {
+        background: rgba(46, 204, 113, 0.12);
+        border-color: #2ecc71;
+        color: #2ecc71;
+    }
+    .option-btn.selected-wrong {
+        background: rgba(231, 76, 60, 0.12);
+        border-color: #e74c3c;
+        color: #e74c3c;
+    }
+    .option-btn.correct-reveal {
+        background: rgba(46, 204, 113, 0.06);
+        border-color: #2ecc71;
+    }
+    .option-btn.disabled {
+        pointer-events: none;
+        opacity: 0.6;
+    }
+    .option-letter {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(74, 124, 247, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: 700;
         font-size: 14px;
         flex-shrink: 0;
-        color: var(--accent);
+        color: #4a7cf7;
+        transition: all 0.2s;
+    }
+    .option-btn.selected-correct .option-letter {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+    }
+    .option-btn.selected-wrong .option-letter {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
     }
 
     /* ---- Обратная связь ---- */
     .feedback {
         padding: 16px 20px;
-        border-radius: var(--radius);
-        margin-top: 16px;
+        border-radius: 12px;
+        margin-top: 20px;
         font-size: 14px;
         line-height: 1.6;
         animation: fadeSlide 0.3s ease;
     }
     .feedback.correct {
-        background: rgba(46, 204, 113, 0.1);
-        border: 1px solid rgba(46, 204, 113, 0.3);
-        color: var(--green);
+        background: rgba(46, 204, 113, 0.08);
+        border: 1px solid rgba(46, 204, 113, 0.25);
+        color: #2ecc71;
     }
     .feedback.wrong {
-        background: rgba(231, 76, 60, 0.1);
-        border: 1px solid rgba(231, 76, 60, 0.3);
-        color: var(--red);
+        background: rgba(231, 76, 60, 0.08);
+        border: 1px solid rgba(231, 76, 60, 0.25);
+        color: #e74c3c;
+    }
+
+    /* ---- Открытый вопрос ---- */
+    .open-answer-area {
+        margin-top: 0;
+    }
+    .open-answer-input {
+        width: 100%;
+        min-height: 130px;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #e8edf5;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+        resize: vertical;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+    }
+    .open-answer-input:focus {
+        outline: none;
+        border-color: #4a7cf7;
+        box-shadow: 0 0 0 3px rgba(74, 124, 247, 0.12);
+    }
+    .open-answer-input:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .open-answer-btn {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 10px 28px;
+        background: #4a7cf7;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .open-answer-btn:hover:not(:disabled) {
+        background: #3b6fd4;
+    }
+    .open-answer-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    /* ---- Навигация (внизу карточки) ---- */
+    .lesson-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 28px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        gap: 12px;
+    }
+    .btn-nav {
+        padding: 10px 24px;
+        border-radius: 12px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-nav-back {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #8b9bb5;
+    }
+    .btn-nav-back:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #e8edf5;
+        background: rgba(255, 255, 255, 0.03);
+    }
+    .btn-nav-next {
+        background: linear-gradient(135deg, #4a7cf7, #5f8ef9);
+        color: #fff;
+        margin-left: auto;
+    }
+    .btn-nav-next:hover {
+        background: linear-gradient(135deg, #3b6fd4, #4a7cf7);
+        box-shadow: 0 4px 20px rgba(74, 124, 247, 0.3);
     }
 
     /* ---- Результаты ---- */
     .results-screen {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        padding: 40px 32px;
         text-align: center;
         animation: fadeSlide 0.4s ease;
     }
     .results-icon {
         font-size: 64px;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
     }
     .results-score {
-        font-size: 48px;
+        font-size: 52px;
         font-weight: 800;
-        color: var(--accent);
-        margin-bottom: 8px;
+        background: linear-gradient(135deg, #4a7cf7, #6c5ce7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
     }
     .results-detail {
-        color: var(--text-secondary);
+        color: #8b9bb5;
         font-size: 15px;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
     .results-stats {
         display: flex;
         justify-content: center;
-        gap: 32px;
-        margin-bottom: 28px;
+        gap: 40px;
+        margin-bottom: 24px;
     }
     .results-stat {
         text-align: center;
@@ -259,18 +389,19 @@
         font-size: 28px;
         font-weight: 700;
     }
-    .results-stat-value.green { color: var(--green); }
-    .results-stat-value.red   { color: var(--red); }
+    .results-stat-value.green { color: #2ecc71; }
+    .results-stat-value.red   { color: #e74c3c; }
     .results-stat-label {
-        font-size: 12px;
-        color: var(--text-secondary);
+        font-size: 11px;
+        color: #8b9bb5;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        margin-top: 2px;
     }
     .results-xp {
         font-size: 18px;
         font-weight: 600;
-        color: var(--accent);
+        color: #4a7cf7;
         margin-bottom: 24px;
     }
     .results-actions {
@@ -279,166 +410,157 @@
         justify-content: center;
         flex-wrap: wrap;
     }
-
-    /* ---- Кнопка «Вернуться» ---- */
-    .btn-back {
-        background: transparent;
-        border: 1px solid var(--border-color);
-        color: var(--text-secondary);
-        padding: 8px 16px;
-        border-radius: var(--radius);
-        cursor: pointer;
+    .results-actions .btn {
+        padding: 10px 24px;
+        border-radius: 12px;
         font-family: 'Inter', sans-serif;
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
         transition: all 0.2s;
     }
-    .btn-back:hover {
-        border-color: var(--accent);
-        color: var(--text-primary);
-        background: rgba(74, 124, 247, 0.05);
+    .results-actions .btn-outline {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #8b9bb5;
     }
-
-    .btn-next {
-        padding: 10px 24px;
-        font-weight: 600;
+    .results-actions .btn-outline:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #e8edf5;
     }
-
-    /* ---- Открытый вопрос ---- */
-    .open-answer-area {
-        margin-top: 20px;
-    }
-    .open-answer-input {
-        width: 100%;
-        min-height: 120px;
-        padding: 14px 16px;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: var(--radius);
-        color: var(--text-primary);
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        line-height: 1.6;
-        resize: vertical;
-        transition: border-color 0.2s;
-        box-sizing: border-box;
-    }
-    .open-answer-input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(74, 124, 247, 0.15);
-    }
-    .open-answer-btn {
-        display: inline-block;
-        margin-top: 12px;
-        padding: 10px 28px;
-        background: var(--accent);
+    .results-actions .btn-primary {
+        background: linear-gradient(135deg, #4a7cf7, #5f8ef9);
         color: #fff;
         border: none;
-        border-radius: var(--radius);
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.2s, opacity 0.2s;
     }
-    .open-answer-btn:hover {
-        background: #3b6fd4;
-    }
-    .open-answer-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+    .results-actions .btn-primary:hover {
+        background: linear-gradient(135deg, #3b6fd4, #4a7cf7);
+        box-shadow: 0 4px 20px rgba(74, 124, 247, 0.3);
     }
 
-    /* ---- Скрытие ---- */
     .hidden {
         display: none !important;
     }
 
-    @media (max-width: 600px) {
-        .results-stats {
-            flex-direction: column;
-            gap: 16px;
+    /* ---- Адаптивность ---- */
+    @media (max-width: 640px) {
+        .lesson-page {
+            padding: 12px 8px;
+            align-items: flex-start;
+            padding-top: 16px;
         }
-        .lecture-nav {
-            flex-direction: column;
-            gap: 12px;
+        .lesson-card-header {
+            padding: 16px 16px;
+            flex-wrap: wrap;
         }
-        .lecture-nav .btn,
-        .lecture-nav .btn-back {
+        .lesson-card-body {
+            padding: 20px 16px;
+            min-height: 280px;
+        }
+        .lesson-card-footer {
+            padding: 14px 16px;
+            flex-direction: column;
+        }
+        .lesson-card-footer .btn-nav {
             width: 100%;
             justify-content: center;
+        }
+        .btn-nav-next {
+            margin-left: 0;
+        }
+        .results-stats {
+            gap: 20px;
+        }
+        .results-score {
+            font-size: 40px;
+        }
+        .lesson-user-mini .mini-name {
+            display: none;
+        }
+        .option-btn {
+            padding: 12px 14px;
+            font-size: 14px;
+        }
+    }
+
+    @media (min-width: 641px) {
+        .lesson-user-mini .mini-name {
+            display: inline;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="lesson-container animate-in">
+<div class="lesson-page">
 
-    <!-- Шапка -->
-    <div class="lesson-header">
-        <a href="{{ url_for('main.skills') }}" class="lesson-back">← Вернуться к навыкам</a>
-        <div class="lesson-title-row">
-            <h2>{{ lesson.skill.icon }} {{ lesson.title }}</h2>
-        </div>
-        <div class="lesson-meta">
-            <span class="badge">
-                {% set diff = lesson.skill.difficulty %}
-                {% if diff == 'beginner' %}🟢 Начальный
-                {% elif diff == 'intermediate' %}🟡 Средний
-                {% elif diff == 'advanced' %}🔴 Продвинутый
-                {% else %}{{ diff|capitalize if diff else 'Не указано' }}{% endif %}
-            </span>
-            <span class="xp-badge">⭐ {{ total_xp }} XP</span>
-        </div>
-    </div>
+    <div class="lesson-card">
 
-    <!-- Прогресс -->
-    <div id="progressArea">
-        <div class="progress-label">
-            <span id="progressPhase">Лекция</span>
-            <span id="progressStep">Блок 1 из {{ topics|length }}</span>
-        </div>
-        <div class="progress-bar-wrap">
-            <div class="progress-bar-fill" id="progressBar" style="width: 0%;"></div>
-        </div>
-    </div>
-
-    <!-- ====== ФАЗА 1: ЛЕКЦИЯ ====== -->
-    <div id="lecturePhase">
-        <div id="lectureBlock" class="lecture-block">
-            <h3 id="lectureTitle"></h3>
-            <div id="lectureContent" class="content"></div>
-            <div class="lecture-nav">
-                <button id="lecturePrevBtn" class="btn-back hidden">← Назад</button>
-                <button id="lectureNextBtn" class="btn btn-primary btn-next">Продолжить →</button>
+        <!-- Хедер -->
+        <div class="lesson-card-header">
+            <a href="{{ url_for('main.skills') }}" class="lesson-back-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Вернуться
+            </a>
+            <div class="lesson-step-indicator">
+                <span id="progressPhase">Лекция</span> &middot;
+                <span id="progressStep">Блок 1 из {{ topics|length }}</span>
+            </div>
+            <div class="lesson-user-mini">
+                <span class="mini-name">{{ current_user.username }}</span>
+                {% if current_user.avatar %}
+                    <img src="{{ url_for('static', filename='avatars/' + current_user.avatar) }}" alt="Аватар" class="mini-avatar">
+                {% else %}
+                    <div class="mini-avatar-placeholder">{{ current_user.username[:2].upper() }}</div>
+                {% endif %}
             </div>
         </div>
-    </div>
 
-    <!-- ====== ФАЗА 2: ТЕСТ ====== -->
-    <div id="quizPhase" class="hidden">
-        <div id="quizBlock" class="question-card-step">
-            <div class="question-number" id="quizNumber"></div>
-            <p class="question-text" id="quizQuestion"></p>
-            <div id="quizOptions" class="options-list"></div>
-            <div id="quizOpenArea" class="open-answer-area hidden">
-                <textarea id="quizOpenInput" class="open-answer-input" placeholder="Введите ваш ответ..."></textarea>
-                <button id="quizOpenSubmitBtn" class="open-answer-btn" disabled>Ответить</button>
-                <div id="quizOpenFeedback"></div>
+        <!-- Прогресс-бар -->
+        <div class="lesson-progress-wrap">
+            <div class="lesson-progress-fill" id="progressBar" style="width: 0%;"></div>
+        </div>
+
+        <!-- Тело -->
+        <div class="lesson-card-body">
+            <!-- Лекция -->
+            <div id="lecturePhase">
+                <div id="lectureBlock" class="lecture-block">
+                    <h3 id="lectureTitle"></h3>
+                    <div id="lectureContent" class="content"></div>
+                </div>
             </div>
-            <div id="quizFeedback"></div>
-            <div class="lecture-nav" style="margin-top: 20px;">
-                <button id="quizPrevBtn" class="btn-back hidden">← Назад</button>
-                <button id="quizNextBtn" class="btn btn-primary btn-next hidden">Следующий вопрос →</button>
+
+            <!-- Тест -->
+            <div id="quizPhase" class="hidden">
+                <div id="quizBlock" class="question-block">
+                    <div class="question-number-label" id="quizNumber"></div>
+                    <p class="question-text" id="quizQuestion"></p>
+                    <div id="quizOptions" class="options-list"></div>
+                    <div id="quizOpenArea" class="open-answer-area hidden">
+                        <textarea id="quizOpenInput" class="open-answer-input" placeholder="Введите ваш ответ..."></textarea>
+                        <button id="quizOpenSubmitBtn" class="open-answer-btn" disabled>Ответить</button>
+                        <div id="quizOpenFeedback"></div>
+                    </div>
+                    <div id="quizFeedback"></div>
+                </div>
+            </div>
+
+            <!-- Результаты -->
+            <div id="resultsPhase" class="hidden">
+                <div id="resultsScreen" class="results-screen"></div>
             </div>
         </div>
-    </div>
 
-    <!-- ====== ФАЗА 3: РЕЗУЛЬТАТЫ ====== -->
-    <div id="resultsPhase" class="hidden">
-        <div id="resultsScreen" class="results-screen"></div>
+        <!-- Навигация -->
+        <div class="lesson-card-footer" id="lessonFooter">
+            <button id="navBackBtn" class="btn-nav btn-nav-back hidden">← Назад</button>
+            <button id="navNextBtn" class="btn-nav btn-nav-next">Продолжить →</button>
+        </div>
+
     </div>
 
 </div>
@@ -456,10 +578,9 @@
     var submitUrl = "{{ url_for('main.submit_lesson', lesson_id=lesson_data.id) if lesson_data else '' }}";
     var skillsUrl = "{{ url_for('main.skills') }}";
 
-    // Объединяем все вопросы (из Topic.question и Question)
+    // Объединяем все вопросы
     var allQuestions = [];
 
-    // Из Topic
     topics.forEach(function(t) {
         if (t.question && t.question.text) {
             allQuestions.push({
@@ -473,7 +594,6 @@
         }
     });
 
-    // Из Question
     questions.forEach(function(q) {
         var opts = [];
         try {
@@ -497,21 +617,23 @@
     var totalQuizQuestions = allQuestions.length;
 
     // --- СОСТОЯНИЕ ---
-    var currentBlock = 0;          // 0-based индекс блока лекции
-    var currentQuestion = 0;       // 0-based индекс вопроса
-    var phase = 'lecture';         // 'lecture' | 'quiz' | 'results'
-    var userAnswers = [];          // [{question_id, selected, correct}]
+    var currentBlock = 0;
+    var currentQuestion = 0;
+    var phase = 'lecture';
+    var userAnswers = [];
     var currentAnswerLocked = false;
 
-    // --- DOM-элементы ---
+    // --- DOM ---
     var $lecturePhase = document.getElementById('lecturePhase');
     var $quizPhase = document.getElementById('quizPhase');
     var $resultsPhase = document.getElementById('resultsPhase');
     var $progressPhase = document.getElementById('progressPhase');
     var $progressStep = document.getElementById('progressStep');
     var $progressBar = document.getElementById('progressBar');
+    var $navBackBtn = document.getElementById('navBackBtn');
+    var $navNextBtn = document.getElementById('navNextBtn');
 
-    // --- ФУНКЦИИ ---
+    // --- ПРОГРЕСС ---
     function updateProgress() {
         var totalSteps = totalLectureBlocks + totalQuizQuestions;
         var done;
@@ -528,44 +650,33 @@
             $progressStep.textContent = 'Завершено';
             done = totalSteps;
         }
-        var pct = Math.round((done / totalSteps) * 100);
+        var pct = totalSteps > 0 ? Math.round((done / totalSteps) * 100) : 0;
         $progressBar.style.width = pct + '%';
-    }
-
-    function scrollToTop() {
-        document.querySelector('.main-content').scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     // --- ЛЕКЦИЯ ---
     function showLectureBlock() {
+        phase = 'lecture';
+        $lecturePhase.classList.remove('hidden');
+        $quizPhase.classList.add('hidden');
+        $resultsPhase.classList.add('hidden');
+
         var topic = topics[currentBlock];
         document.getElementById('lectureTitle').textContent = '📖 ' + topic.title;
         document.getElementById('lectureContent').innerHTML = topic.content;
 
-        var prevBtn = document.getElementById('lecturePrevBtn');
-        var nextBtn = document.getElementById('lectureNextBtn');
-
         if (currentBlock === 0) {
-            prevBtn.classList.add('hidden');
+            $navBackBtn.classList.add('hidden');
         } else {
-            prevBtn.classList.remove('hidden');
+            $navBackBtn.classList.remove('hidden');
         }
 
         if (currentBlock === totalLectureBlocks - 1) {
-            nextBtn.textContent = totalQuizQuestions > 0 ? 'Пройти тест →' : 'Завершить →';
-            nextBtn.onclick = function() {
-                if (totalQuizQuestions > 0) {
-                    startQuiz();
-                } else {
-                    finishLesson();
-                }
-            };
+            $navNextBtn.textContent = totalQuizQuestions > 0 ? 'Начать тест →' : 'Завершить →';
         } else {
-            nextBtn.textContent = 'Продолжить →';
-            nextBtn.onclick = nextLectureBlock;
+            $navNextBtn.textContent = 'Продолжить →';
         }
 
-        prevBtn.onclick = prevLectureBlock;
         updateProgress();
     }
 
@@ -573,7 +684,12 @@
         if (currentBlock < totalLectureBlocks - 1) {
             currentBlock++;
             showLectureBlock();
-            scrollToTop();
+        } else {
+            if (totalQuizQuestions > 0) {
+                startQuiz();
+            } else {
+                finishLesson();
+            }
         }
     }
 
@@ -581,7 +697,6 @@
         if (currentBlock > 0) {
             currentBlock--;
             showLectureBlock();
-            scrollToTop();
         }
     }
 
@@ -596,10 +711,8 @@
         currentAnswerLocked = false;
         showQuizQuestion();
         updateProgress();
-        scrollToTop();
     }
 
-    // --- Определитель типа вопроса ---
     function isOpenQuestion(q) {
         return !q.options || !Array.isArray(q.options) || q.options.length === 0;
     }
@@ -608,41 +721,29 @@
         var q = allQuestions[currentQuestion];
         currentAnswerLocked = false;
 
-        document.getElementById('quizNumber').textContent = 'Вопрос ' + (currentQuestion + 1) + ' из ' + totalQuizQuestions;
-        document.getElementById('quizQuestion').textContent = q.text;
-
+        document.getElementById('quizNumber').textContent = 'ВОПРОС ' + (currentQuestion + 1) + ' ИЗ ' + totalQuizQuestions;
+        document.getElementById('quizQuestion').innerHTML = q.text;
         document.getElementById('quizFeedback').innerHTML = '';
         document.getElementById('quizOpenFeedback').innerHTML = '';
 
-        var prevBtn = document.getElementById('quizPrevBtn');
-        var nextBtn = document.getElementById('quizNextBtn');
-
         if (currentQuestion === 0) {
-            prevBtn.classList.add('hidden');
+            $navBackBtn.classList.add('hidden');
         } else {
-            prevBtn.classList.remove('hidden');
+            $navBackBtn.classList.remove('hidden');
         }
-        nextBtn.classList.add('hidden');
-
-        prevBtn.onclick = function() {
-            if (currentQuestion > 0) {
-                currentQuestion--;
-                showQuizQuestion();
-                scrollToTop();
-            }
-        };
+        $navNextBtn.classList.add('hidden');
 
         if (isOpenQuestion(q)) {
-            // --- ОТКРЫТЫЙ ВОПРОС ---
+            // Открытый вопрос
             document.getElementById('quizOptions').classList.add('hidden');
             var openArea = document.getElementById('quizOpenArea');
             openArea.classList.remove('hidden');
             var openInput = document.getElementById('quizOpenInput');
             openInput.value = '';
+            openInput.disabled = false;
             var openSubmitBtn = document.getElementById('quizOpenSubmitBtn');
             openSubmitBtn.disabled = true;
 
-            // Активация кнопки при вводе текста
             openInput.oninput = function() {
                 openSubmitBtn.disabled = (openInput.value.trim().length === 0);
             };
@@ -655,7 +756,6 @@
                 handleOpenAnswer(openInput.value.trim());
             };
 
-            // Enter + Ctrl отправляет
             openInput.onkeydown = function(e) {
                 if (e.ctrlKey && e.key === 'Enter') {
                     e.preventDefault();
@@ -667,7 +767,7 @@
 
             openInput.focus();
         } else {
-            // --- ЗАКРЫТЫЙ ВОПРОС (ВАРИАНТЫ) ---
+            // Закрытый вопрос
             document.getElementById('quizOptions').classList.remove('hidden');
             document.getElementById('quizOpenArea').classList.add('hidden');
 
@@ -682,7 +782,6 @@
             });
             document.getElementById('quizOptions').innerHTML = optionsHtml;
 
-            // Привязываем обработчики кликов
             var optionButtons = document.querySelectorAll('#quizOptions .option-btn');
             optionButtons.forEach(function(btn) {
                 btn.addEventListener('click', function() {
@@ -696,19 +795,16 @@
         updateProgress();
     }
 
-    // --- ОБРАБОТКА ОТКРЫТОГО ОТВЕТА ---
     function handleOpenAnswer(userText) {
         var q = allQuestions[currentQuestion];
         var isCorrect = checkOpenAnswer(userText, q.explanation || '');
 
-        // Сохраняем ответ
         userAnswers.push({
             question_id: q.id,
             selected: userText,
             correct: isCorrect ? 1 : 0
         });
 
-        // Показываем обратную связь
         var feedbackEl = document.getElementById('quizOpenFeedback');
         if (isCorrect) {
             feedbackEl.innerHTML = '<div class="feedback correct"><strong>✅ ВЕРНО!</strong> ' + (q.explanation || '') + '</div>';
@@ -716,26 +812,10 @@
             feedbackEl.innerHTML = '<div class="feedback wrong"><strong>❌ НЕВЕРНО!</strong> Подумайте ещё. ' + (q.explanation || '') + '</div>';
         }
 
-        // Кнопка «Далее»
-        var nextBtn = document.getElementById('quizNextBtn');
-        nextBtn.classList.remove('hidden');
-        if (currentQuestion === totalQuizQuestions - 1) {
-            nextBtn.textContent = 'Завершить тестирование ✅';
-            nextBtn.onclick = finishLesson;
-        } else {
-            nextBtn.textContent = 'Следующий вопрос →';
-            nextBtn.onclick = function() {
-                currentQuestion++;
-                showQuizQuestion();
-                scrollToTop();
-            };
-        }
-        nextBtn.focus();
+        showQuizNextButton();
     }
 
-    // --- ПРОВЕРКА ОТКРЫТОГО ОТВЕТА ПО КЛЮЧЕВЫМ СЛОВАМ ---
     function checkOpenAnswer(userText, explanationText) {
-        // Ключевые слова для вопроса про пароль (вопрос 16)
         var knownKeywords = [
             ['длина', '12', 'символов', 'регистров', 'цифр', 'специальных', 'личной', 'словарных'],
             ['длина', '12', 'символов', 'регистр', 'цифр', 'специальных', 'личной информации', 'словарных'],
@@ -745,7 +825,6 @@
 
         var lowerText = userText.toLowerCase();
 
-        // Проверяем по известным наборам
         for (var ks = 0; ks < knownKeywords.length; ks++) {
             var keywords = knownKeywords[ks];
             var minMatches = Math.max(3, Math.ceil(keywords.length * 0.5));
@@ -757,9 +836,7 @@
             }
         }
 
-        // Если нет известного набора — проверяем длину ответа (должен быть содержательным)
         if (userText.length >= 30) {
-            // Ищем ключевые слова из explanation
             if (explanationText && explanationText.length > 10) {
                 var explWords = explanationText.toLowerCase()
                     .replace(/[.,!?;:()«»""'']/g, ' ')
@@ -774,7 +851,6 @@
                     }
                 }
             }
-            // Если explanation слишком короткий/пустой — считаем верным любой развёрнутый ответ
             return true;
         }
 
@@ -787,18 +863,15 @@
         var isCorrect = (selectedIndex === correctIndex);
         var q = allQuestions[currentQuestion];
 
-        // Блокируем все кнопки
         var allBtns = document.querySelectorAll('#quizOptions .option-btn');
         allBtns.forEach(function(btn) {
             btn.classList.add('disabled');
         });
 
-        // Подсвечиваем выбранный вариант
         if (isCorrect) {
             selectedBtn.classList.add('selected-correct');
         } else {
             selectedBtn.classList.add('selected-wrong');
-            // Подсвечиваем правильный ответ
             allBtns.forEach(function(btn) {
                 var idx = parseInt(btn.getAttribute('data-index'));
                 if (idx === correctIndex) {
@@ -807,54 +880,71 @@
             });
         }
 
-        // Сохраняем ответ
         userAnswers.push({
             question_id: q.id,
             selected: selectedIndex,
             correct: correctIndex
         });
 
-        // Показываем обратную связь
         var feedbackHtml = '';
         if (isCorrect) {
             feedbackHtml = '<div class="feedback correct"><strong>✅ ВЕРНО!</strong>';
-            if (q.explanation) {
-                feedbackHtml += ' ' + q.explanation;
-            }
+            if (q.explanation) feedbackHtml += ' ' + q.explanation;
             feedbackHtml += '</div>';
         } else {
             feedbackHtml = '<div class="feedback wrong"><strong>❌ НЕВЕРНО!</strong>';
             var correctOptionText = q.options[correctIndex] || '';
             feedbackHtml += ' Правильный ответ: <strong>' + correctOptionText + '</strong>.';
-            if (q.explanation) {
-                feedbackHtml += ' ' + q.explanation;
-            }
+            if (q.explanation) feedbackHtml += ' ' + q.explanation;
             feedbackHtml += '</div>';
         }
         document.getElementById('quizFeedback').innerHTML = feedbackHtml;
 
-        // Показываем кнопку «Далее» / «Завершить»
-        var nextBtn = document.getElementById('quizNextBtn');
-        nextBtn.classList.remove('hidden');
-        if (currentQuestion === totalQuizQuestions - 1) {
-            nextBtn.textContent = 'Завершить тестирование ✅';
-            nextBtn.onclick = finishLesson;
-        } else {
-            nextBtn.textContent = 'Следующий вопрос →';
-            nextBtn.onclick = function() {
-                currentQuestion++;
-                showQuizQuestion();
-                scrollToTop();
-            };
-        }
-        nextBtn.focus();
+        showQuizNextButton();
     }
 
-    // --- ФИНАЛЬНАЯ ОТПРАВКА ---
+    function showQuizNextButton() {
+        $navNextBtn.classList.remove('hidden');
+        if (currentQuestion === totalQuizQuestions - 1) {
+            $navNextBtn.textContent = 'Завершить тестирование ✅';
+        } else {
+            $navNextBtn.textContent = 'Следующий вопрос →';
+        }
+        $navNextBtn.focus();
+    }
+
+    // --- НАВИГАЦИЯ (общие кнопки) ---
+    $navBackBtn.addEventListener('click', function() {
+        if (phase === 'lecture') {
+            prevLectureBlock();
+        } else if (phase === 'quiz') {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                showQuizQuestion();
+            }
+        }
+    });
+
+    $navNextBtn.addEventListener('click', function() {
+        if (phase === 'lecture') {
+            nextLectureBlock();
+        } else if (phase === 'quiz') {
+            if (currentQuestion < totalQuizQuestions - 1) {
+                currentQuestion++;
+                showQuizQuestion();
+            } else {
+                finishLesson();
+            }
+        }
+    });
+
+    // --- ФИНИШ ---
     function finishLesson() {
         phase = 'results';
         $lecturePhase.classList.add('hidden');
         $quizPhase.classList.add('hidden');
+        $navBackBtn.classList.add('hidden');
+        $navNextBtn.classList.add('hidden');
         $progressPhase.textContent = 'Отправка результатов...';
         updateProgress();
 
@@ -869,9 +959,8 @@
         })
         .catch(function(err) {
             document.getElementById('resultsScreen').innerHTML =
-                '<p style="color: var(--red);">Ошибка при отправке результатов. Пожалуйста, попробуйте снова.</p>';
+                '<p style="color: #e74c3c;">Ошибка при отправке результатов. Пожалуйста, попробуйте снова.</p>';
             $resultsPhase.classList.remove('hidden');
-            scrollToTop();
         });
     }
 
@@ -886,7 +975,7 @@
 
         var html = '';
         html += '<div class="results-icon">' + icon + '</div>';
-        html += '<h3 style="margin: 0 0 8px 0; font-size: 24px;">' + title + '</h3>';
+        html += '<h3 style="margin: 0 0 8px 0; font-size: 24px; color: #e8edf5;">' + title + '</h3>';
         html += '<div class="results-score">' + pct + '%</div>';
         html += '<div class="results-detail">' + correct + ' из ' + total + ' правильных ответов</div>';
 
@@ -898,15 +987,15 @@
         if (xp > 0) {
             html += '<div class="results-xp">⭐ +' + xp + ' XP начислено!</div>';
         } else {
-            html += '<div class="results-xp" style="color: var(--text-secondary);">Для получения XP нужно набрать 70% и более</div>';
+            html += '<div class="results-xp" style="color: #8b9bb5;">Для получения XP нужно набрать 70% и более</div>';
         }
 
         if (data.level_up) {
-            html += '<div style="color: var(--accent); font-weight: 600; font-size: 16px; margin-bottom: 16px;">🎉 Вы достигли ' + data.new_level + ' уровня!</div>';
+            html += '<div style="color: #4a7cf7; font-weight: 600; font-size: 16px; margin-bottom: 16px;">🎉 Вы достигли ' + data.new_level + ' уровня!</div>';
         }
 
         if (data.achievements && data.achievements.length > 0) {
-            html += '<div style="color: var(--green); font-weight: 600; margin-bottom: 16px;">🏆 Получены новые достижения!</div>';
+            html += '<div style="color: #2ecc71; font-weight: 600; margin-bottom: 16px;">🏆 Получены новые достижения!</div>';
         }
 
         html += '<div class="results-actions">';
@@ -918,22 +1007,28 @@
 
         document.getElementById('resultsScreen').innerHTML = html;
         $resultsPhase.classList.remove('hidden');
+
+        // Конфетти при высоком результате
+        if (pct >= 80 && typeof confetti === 'function') {
+            setTimeout(function() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }, 300);
+        }
+
         updateProgress();
-        scrollToTop();
     }
 
     // --- ЗАПУСК ---
     if (totalLectureBlocks > 0) {
         showLectureBlock();
     } else if (totalQuizQuestions > 0) {
-        // Если нет лекции — сразу тест
         startQuiz();
     } else {
-        // Вообще ничего нет
-        document.getElementById('progressArea').classList.add('hidden');
-        document.getElementById('lecturePhase').classList.add('hidden');
+        document.getElementById('progressPhase').textContent = '';
+        document.getElementById('progressStep').textContent = '';
+        $lecturePhase.classList.add('hidden');
+        $navBackBtn.classList.add('hidden');
+        $navNextBtn.classList.add('hidden');
         document.getElementById('resultsScreen').innerHTML =
-            '<p style="text-align: center; color: var(--text-secondary);">В этом уроке пока нет материалов.</p>';
+            '<p style="text-align: center; color: #8b9bb5;">В этом уроке пока нет материалов.</p>';
         $resultsPhase.classList.remove('hidden');
     }
 

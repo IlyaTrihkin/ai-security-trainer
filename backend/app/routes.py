@@ -1,4 +1,8 @@
 import json
+import markdown
+import random
+import hmac
+import logging
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
@@ -7,6 +11,9 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 import uuid
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 from . import db
 from .models import User, Skill, Lesson, UserProgress, Question, Achievement, Topic, UserAchievement
 from .gamification import check_achievements
@@ -18,6 +25,17 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def shuffle_options(options, correct_idx):
+    """Перемешивает варианты ответов, возвращает (shuffled_list, new_correct_idx)."""
+    if not options or correct_idx >= len(options):
+        return options, correct_idx
+    correct_value = options[correct_idx]
+    shuffled = list(options)
+    random.shuffle(shuffled)
+    new_correct_idx = shuffled.index(correct_value)
+    return shuffled, new_correct_idx
 
 @bp.route('/')
 def index():
@@ -88,8 +106,10 @@ def dashboard():
         les = Lesson.query.get(rp.lesson_id)
         if les:
             topics = Topic.query.filter_by(lesson_id=les.id).all()
-            tq = len(topics)
+            questions = Question.query.filter_by(lesson_id=les.id).all()
+            tq = len(topics) + len(questions)
             pct = int((rp.score / tq) * 100) if tq > 0 else 0
+            pct = min(pct, 100)
             recent_lessons.append({
                 'title': les.title,
                 'score': rp.score,
@@ -177,7 +197,7 @@ def profile():
             flash('Все поля обязательны', 'danger')
         elif not check_password_hash(current_user.password_hash, current_password):
             flash('Текущий пароль неверен', 'danger')
-        elif new_password != confirm_password:
+        elif not hmac.compare_digest(new_password.encode('utf-8'), confirm_password.encode('utf-8')):
             flash('Новые пароли не совпадают', 'danger')
         elif len(new_password) < 6:
             flash('Новый пароль должен содержать не менее 6 символов', 'danger')
@@ -214,19 +234,20 @@ def upload_avatar():
             print(f"[AVATAR] Saved to: {file_path}")
             if current_user.avatar:
                 old_path = os.path.join(UPLOAD_FOLDER, current_user.avatar)
-                if os.path.exists(old_path):
-                    try:
-                        os.remove(old_path)
-                        print(f"[AVATAR] Deleted old avatar: {old_path}")
-                    except OSError as e:
-                        print(f"[AVATAR] Failed to delete old avatar {old_path}: {e}")
+                try:
+                    os.remove(old_path)
+                    print(f"[AVATAR] Deleted old avatar: {old_path}")
+                except FileNotFoundError:
+                    print(f"[AVATAR] Old avatar already gone: {old_path}")
+                except OSError as e:
+                    print(f"[AVATAR] Failed to delete old avatar {old_path}: {e}")
             current_user.avatar = filename
             db.session.commit()
             print(f"[AVATAR] User {current_user.id} avatar updated to: {filename}")
             return jsonify({'success': True, 'message': 'Аватар обновлён'})
         except Exception as e:
-            print(f"[AVATAR] Upload error: {e}")
-            return jsonify({'success': False, 'message': f'Ошибка при сохранении: {str(e)}'}), 500
+            logger.error(f"Avatar upload error: {e}")
+            return jsonify({'success': False, 'message': 'Ошибка при сохранении файла'}), 500
     else:
         return jsonify({'success': False, 'message': 'Недопустимый формат'}), 400
 
@@ -236,14 +257,13 @@ def delete_avatar():
     if current_user.avatar:
         old_path = os.path.join(UPLOAD_FOLDER, current_user.avatar)
         print(f"[AVATAR] Deleting: {old_path}")
-        if os.path.exists(old_path):
-            try:
-                os.remove(old_path)
-                print(f"[AVATAR] Deleted: {old_path}")
-            except OSError as e:
-                print(f"[AVATAR] Failed to delete {old_path}: {e}")
-        else:
+        try:
+            os.remove(old_path)
+            print(f"[AVATAR] Deleted: {old_path}")
+        except FileNotFoundError:
             print(f"[AVATAR] File not found: {old_path}")
+        except OSError as e:
+            print(f"[AVATAR] Failed to delete {old_path}: {e}")
         current_user.avatar = None
         db.session.commit()
         print(f"[AVATAR] User {current_user.id} avatar set to None")
@@ -254,8 +274,21 @@ def delete_avatar():
 @login_required
 def skills():
     all_skills = Skill.query.order_by(Skill.order).all()
-    progress = UserProgress.query.filter_by(user_id=current_user.id).all()
-    completed_lessons = {p.lesson_id for p in progress if p.completed}
+    progress_records = UserProgress.query.filter_by(user_id=current_user.id).all()
+    completed_lessons = {p.lesson_id for p in progress_records if p.completed}
+
+    # Словарь прогресса для шаблона
+    progress = {}
+    for p in progress_records:
+        lesson = Lesson.query.get(p.lesson_id)
+        total_q = (len(lesson.topics) + len(lesson.questions)) if lesson else 0
+        progress[p.lesson_id] = {
+            'score': p.score,
+            'completed': p.completed,
+            'attempts': p.attempts,
+            'xp_earned': p.xp_earned,
+            'total_questions': total_q,
+        }
 
     # Группировка по difficulty (beginner, intermediate, advanced)
     grouped = {}
@@ -278,6 +311,7 @@ def skills():
         grouped_skills=grouped,
         levels=levels,
         completed_lessons=completed_lessons,
+        progress=progress,
         user=current_user
     )
 
@@ -291,13 +325,60 @@ def lesson(lesson_id):
     progress = UserProgress.query.filter_by(
         user_id=current_user.id, lesson_id=lesson_id, completed=True
     ).first()
-    if progress:
-        flash('Вы уже прошли этот урок!', 'info')
-        return redirect(url_for('main.skills'))
+
+    reset = request.args.get('reset', 'false').lower() == 'true'
+    if progress and not reset:
+        flash('Вы уже прошли этот урок! Нажмите «Пройти заново», чтобы попробовать ещё раз.', 'info')
 
     # Сериализация данных для JSON-передачи в JavaScript
-    topics_data = [{'id': t.id, 'title': t.title, 'content': t.content, 'question': t.question, 'order': t.order} for t in topics]
-    questions_data = [{'id': q.id, 'text': q.text, 'options': q.options, 'correct_answer': q.correct_answer, 'explanation': q.explanation} for q in questions]
+    # Преобразуем Markdown-контент в HTML
+    topics_data = []
+    for t in topics:
+        html_content = markdown.markdown(t.content, extensions=['extra', 'codehilite', 'toc']) if t.content else ''
+        topics_data.append({
+            'id': t.id,
+            'title': t.title,
+            'content': html_content,
+            'question': t.question,
+            'order': t.order,
+        })
+    # Перемешиваем варианты ответов с сохранением правильного индекса
+    questions_data = []
+    for q in questions:
+        opts = q.options
+        try:
+            if isinstance(opts, str):
+                opts = json.loads(opts)
+        except json.JSONDecodeError:
+            opts = []
+        if isinstance(opts, list) and len(opts) > 0:
+            correct_idx = q.correct_answer if q.correct_answer is not None else 0
+            shuffled, new_correct = shuffle_options(opts, correct_idx)
+            questions_data.append({
+                'id': q.id,
+                'text': q.text,
+                'options': shuffled,
+                'correct_answer': new_correct,
+                'explanation': q.explanation or ''
+            })
+        else:
+            questions_data.append({
+                'id': q.id,
+                'text': q.text,
+                'options': opts,
+                'correct_answer': q.correct_answer,
+                'explanation': q.explanation or ''
+            })
+
+    # Перемешиваем варианты в вопросах внутри тем
+    for t in topics_data:
+        if t.get('question') and t['question'].get('options'):
+            opts = t['question']['options']
+            if isinstance(opts, list) and len(opts) > 0:
+                correct_idx = t['question'].get('correct', 0) if t['question'].get('correct') is not None else 0
+                shuffled, new_correct = shuffle_options(list(opts), correct_idx)
+                t['question']['options'] = shuffled
+                t['question']['correct'] = new_correct
     lesson_data = {'id': lesson.id, 'title': lesson.title, 'description': lesson.description, 'difficulty': lesson.difficulty, 'xp_reward': lesson.xp_reward}
 
     # XP за прохождение: 10 XP за каждый вопрос
@@ -329,12 +410,10 @@ def submit_lesson(lesson_id):
     topics = Topic.query.filter_by(lesson_id=lesson_id).order_by(Topic.order).all()
     questions = Question.query.filter_by(lesson_id=lesson_id).order_by(Question.order).all()
 
-    # Проверяем, не пройден ли уже урок
+    # Ищем существующую запись прогресса
     existing = UserProgress.query.filter_by(
-        user_id=current_user.id, lesson_id=lesson_id, completed=True
+        user_id=current_user.id, lesson_id=lesson_id
     ).first()
-    if existing:
-        return jsonify({'success': False, 'message': 'Вы уже прошли этот урок!', 'redirect': url_for('main.skills')}), 400
 
     # Определяем источник данных: JSON или form-data
     if request.is_json:
@@ -369,14 +448,23 @@ def submit_lesson(lesson_id):
             if frontend_correct == 1:
                 correct_count += 1
         else:
-            # Закрытый вопрос — сравниваем индекс ответа с правильным индексом
-            if not is_json and user_ans is not None:
+            # Закрытый вопрос — сравниваем индекс ответа с правильным индексом (из данных клиента)
+            if is_json and isinstance(ans_data, dict):
+                # Используем correct из клиентских данных (перемешанный индекс)
+                client_correct = ans_data.get('correct')
                 try:
-                    user_ans = int(user_ans)
+                    user_ans = int(ans_data.get('selected'))
+                except (TypeError, ValueError):
+                    user_ans = None
+                if user_ans is not None and user_ans == client_correct:
+                    correct_count += 1
+            elif not is_json:
+                try:
+                    user_ans = int(user_ans) if user_ans is not None else None
                 except (ValueError, TypeError):
                     user_ans = None
-            if user_ans == correct_ans:
-                correct_count += 1
+                if user_ans == correct_ans:
+                    correct_count += 1
 
     # Сбор ответов: вопросы (ключи: q_<id>)
     for q in questions:
@@ -389,7 +477,7 @@ def submit_lesson(lesson_id):
         # Определяем, открытый ли это вопрос
         try:
             q_opts = json.loads(q.options) if isinstance(q.options, str) else (q.options or [])
-        except Exception:
+        except json.JSONDecodeError:
             q_opts = []
         is_open = not q_opts or len(q_opts) == 0
 
@@ -399,31 +487,50 @@ def submit_lesson(lesson_id):
             if frontend_correct == 1:
                 correct_count += 1
         else:
-            # Закрытый вопрос
-            if not is_json and user_ans is not None:
+            # Закрытый вопрос — используем correct из клиентских данных (перемешанный индекс)
+            if is_json and isinstance(ans_data, dict):
+                client_correct = ans_data.get('correct')
                 try:
-                    user_ans = int(user_ans)
-                except (ValueError, TypeError):
+                    user_ans = int(ans_data.get('selected'))
+                except (TypeError, ValueError):
                     user_ans = None
-            if user_ans == correct_ans:
-                correct_count += 1
+                if user_ans is not None and user_ans == client_correct:
+                    correct_count += 1
+            elif not is_json:
+                if not is_json and user_ans is not None:
+                    try:
+                        user_ans = int(user_ans)
+                    except (ValueError, TypeError):
+                        user_ans = None
+                if user_ans == correct_ans:
+                    correct_count += 1
 
     percentage = int((correct_count / total_questions) * 100) if total_questions > 0 else 0
 
     # Порог 70% для начисления XP
     xp_reward = lesson.xp_reward if percentage >= 70 else 0
 
-    # Сохраняем попытку в UserProgress
-    progress = UserProgress(
-        user_id=current_user.id,
-        skill_id=lesson.skill_id,
-        lesson_id=lesson.id,
-        completed=True,
-        score=correct_count,
-        xp_earned=xp_reward,
-        completed_at=datetime.utcnow()
-    )
-    db.session.add(progress)
+    # Сохраняем / обновляем прогресс
+    if existing:
+        existing.attempts = (existing.attempts or 0) + 1
+        if correct_count > existing.score:
+            existing.score = correct_count
+            existing.xp_earned = xp_reward
+        existing.completed = True
+        existing.completed_at = datetime.utcnow()
+        progress = existing
+    else:
+        progress = UserProgress(
+            user_id=current_user.id,
+            skill_id=lesson.skill_id,
+            lesson_id=lesson.id,
+            completed=True,
+            score=correct_count,
+            xp_earned=xp_reward,
+            attempts=1,
+            completed_at=datetime.utcnow()
+        )
+        db.session.add(progress)
 
     # Начисляем XP пользователю (только если порог пройден)
     level_up = False

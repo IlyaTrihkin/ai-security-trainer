@@ -48,7 +48,7 @@
     <div class="form-row">
         <div class="form-group form-half">
             <label for="order" class="form-label">Порядок сортировки</label>
-            <input type="number" id="order" name="order" class="form-control" value="{{ lesson.order if lesson else 0 }}">
+            <input type="number" id="order" name="order" class="form-control" value="{{ lesson.order if lesson else 1 }}" min="1">
         </div>
     </div>
 
@@ -175,7 +175,7 @@ function addTopicBlock() {
         </div>
         <div class="form-group" style="max-width:150px;">
             <label class="form-label">Порядок</label>
-            <input type="number" name="topic_order" class="form-control" value="0">
+            <input type="number" name="topic_order" class="form-control" value="1" min="1">
         </div>
     `;
     container.appendChild(block);
@@ -246,7 +246,7 @@ function addQuestionBlock() {
             </div>
             <div class="form-group form-half">
                 <label class="form-label">Порядок</label>
-                <input type="number" name="question_order" class="form-control" value="0">
+                <input type="number" name="question_order" class="form-control" value="1" min="1">
             </div>
         </div>
         <div class="form-group">

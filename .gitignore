@@ -21,3 +21,11 @@ build/
 
 instance/
 backend/.venv/
+
+# Cline / MyCoP artifacts
+cline_mcp_settings.json
+cline_instructions.md
+.context/
+
+# User uploaded avatars
+frontend/static/avatars/

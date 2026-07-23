@@ -50,7 +50,7 @@ class Topic(db.Model):
     title = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)   # теория по теме
     image_url = db.Column(db.String(200))
-    question = db.Column(db.JSON, nullable=False)  # {text, options, correct}
+    question = db.Column(db.JSON, nullable=True)  # {text, options, correct} — вынесено в отдельную таблицу Question
     order = db.Column(db.Integer, default=0)
 
 class Question(db.Model):
@@ -70,7 +70,10 @@ class UserProgress(db.Model):
     completed = db.Column(db.Boolean, default=False)
     score = db.Column(db.Integer, default=0)
     xp_earned = db.Column(db.Integer, default=0)
+    attempts = db.Column(db.Integer, default=0)
     completed_at = db.Column(db.DateTime)
+
+    lesson = db.relationship('Lesson', backref='progress')
 
 class Achievement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -79,6 +82,7 @@ class Achievement(db.Model):
     icon = db.Column(db.String(50), default='🏆')
     condition_type = db.Column(db.String(50))
     condition_value = db.Column(db.Integer)
+    xp_reward = db.Column(db.Integer, default=0)
 
 class UserAchievement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
