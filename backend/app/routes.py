@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 from . import db
 from .models import User, Skill, Lesson, UserProgress, Question, Achievement, Topic, UserAchievement
 from .gamification import check_achievements
-from .yandex_gpt import generate_questions
+from .yandex_gpt import generate_questions, generate_answer
 
 bp = Blueprint('main', __name__)
 
@@ -652,12 +652,14 @@ def leaderboard():
 @login_required
 def ai_ask():
     data = request.json
-    question = data.get('question', '')
+    question = data.get('question', '').strip()
     context = data.get('context', 'Общий вопрос по ИБ')
-    # Заглушка — позже заменим на реальный вызов YandexGPT
-    return jsonify({
-        'answer': f'🤖 Хороший вопрос! Пока я ещё учусь, но скоро буду отвечать на все вопросы по ИБ. Твой вопрос: "{question}" (контекст: {context})'
-    })
+
+    if not question:
+        return jsonify({'answer': 'Пожалуйста, задайте вопрос.'})
+
+    answer = generate_answer(question, context)
+    return jsonify({'answer': answer})
 
 
 @bp.route('/generate_questions/<int:lesson_id>', methods=['POST'])

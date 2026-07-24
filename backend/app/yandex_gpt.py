@@ -86,3 +86,64 @@ def generate_questions(topic: str, lesson_title: str, count: int = 3) -> list:
         else:
             logger.error("Не удалось распарсить JSON от YandexGPT. Ответ: %s", answer_text)
             raise Exception("Не удалось распарсить JSON от YandexGPT")
+
+
+def generate_answer(question: str, context: str = "") -> str:
+    """
+    Генерирует ответ на вопрос пользователя по информационной безопасности с помощью YandexGPT.
+    """
+    if not YANDEX_API_KEY or not YANDEX_FOLDER_ID:
+        logger.warning("YandexGPT API не настроен — YANDEX_API_KEY или YANDEX_FOLDER_ID отсутствуют")
+        return "Извините, API YandexGPT не настроен. Пожалуйста, обратитесь к администратору."
+
+    prompt = f"""Ты — эксперт по информационной безопасности. Отвечай на вопросы пользователя чётко, по делу, с примерами, если нужно.
+Контекст (если есть): {context}
+Вопрос: {question}
+Ответ:"""
+
+    url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+    headers = {
+        "Authorization": f"Api-Key {YANDEX_API_KEY}",
+        "x-folder-id": YANDEX_FOLDER_ID,
+        "Content-Type": "application/json"
+    }
+    data = {
+        "modelUri": f"gpt://{YANDEX_FOLDER_ID}/yandexgpt-lite/latest",
+        "completionOptions": {
+            "stream": False,
+            "temperature": 0.7,
+            "maxTokens": 1500
+        },
+        "messages": [
+            {
+                "role": "system",
+                "text": "Ты — полезный ассистент, эксперт по информационной безопасности. Отвечай кратко, но содержательно."
+            },
+            {
+                "role": "user",
+                "text": prompt
+            }
+        ]
+    }
+
+    logger.info("Отправка запроса к YandexGPT для ответа на вопрос: «%s»", question[:100])
+
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+    except requests.exceptions.Timeout:
+        logger.error("Таймаут при обращении к YandexGPT API")
+        return "Извините, YandexGPT не ответил вовремя. Попробуйте позже."
+    except requests.exceptions.RequestException as e:
+        logger.error("Сетевая ошибка при обращении к YandexGPT: %s", e)
+        return "Извините, произошла ошибка при обращении к YandexGPT. Попробуйте позже."
+
+    if response.status_code != 200:
+        logger.error("YandexGPT API error: %s - %s", response.status_code, response.text[:200])
+        return "Извините, произошла ошибка при обращении к YandexGPT. Попробуйте позже."
+
+    result = response.json()
+    answer = result['result']['alternatives'][0]['message']['text']
+    answer = answer.strip()
+
+    logger.info("YandexGPT ответил успешно, длина ответа: %d символов", len(answer))
+    return answer
