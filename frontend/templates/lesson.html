@@ -1248,7 +1248,7 @@
         html += '<h3 style="margin: 0 0 8px 0; font-size: 24px; color: #e8edf5;">' + title + '</h3>';
         html += '<div class="results-score">' + newPct + '%</div>';
         html += '<div class="results-detail">' + newCorrect + ' из ' + newTotal + ' правильных ответов</div>';
-        html += '<div style="color: #8b9bb5; font-size: 13px; margin-bottom: 16px;">(основной тест: ' + mainCorrect + '/' + mainTotal + ' + бонус: ' + bonusCorrect + '/' + bonusTotal + ')</div>';
+        html += '';
 
         html += '<div class="results-stats">';
         html += '<div class="results-stat"><div class="results-stat-value green">' + newCorrect + '</div><div class="results-stat-label">Всего правильно</div></div>';
@@ -1261,7 +1261,7 @@
             html += '<div style="color: #e74c3c; font-weight: 500; margin-bottom: 16px;">😔 К сожалению, ' + newPct + '% всё ещё меньше 70%. Попробуйте ещё раз позже.</div>';
         }
 
-        html += '<p style="color: #8b9bb5; font-size: 13px; margin: 20px 0;">Дополнительные вопросы не сохраняются в БД — результат пересчитан локально.</p>';
+        html += '';
 
         html += '<div class="results-actions" style="margin-top: 20px;">';
         html += '<a href="' + skillsUrl + '" class="btn btn-outline">← Вернуться к навыкам</a>';

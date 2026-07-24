@@ -171,7 +171,8 @@ def dashboard():
         skill_lessons = Lesson.query.filter_by(skill_id=skill.id).order_by(Lesson.order).all()
         for lesson in skill_lessons:
             progress = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
-            total_q = len(lesson.questions) if lesson.questions else 0
+            total_questions = Question.query.filter_by(lesson_id=lesson.id).count()
+            total_q = total_questions
             if progress and total_q > 0:
                 percent = (progress.score / total_q) * 100
                 status = 'completed' if percent >= 70 else 'started'
