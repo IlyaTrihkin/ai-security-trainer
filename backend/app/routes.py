@@ -106,9 +106,8 @@ def dashboard():
     for rp in recent_progress:
         les = Lesson.query.get(rp.lesson_id)
         if les:
-            topics = Topic.query.filter_by(lesson_id=les.id).all()
-            questions = Question.query.filter_by(lesson_id=les.id).all()
-            tq = len(topics) + len(questions)
+            topic_q_count = sum(1 for t in les.topics if t.question and t.question.get('text'))
+            tq = topic_q_count + len(les.questions)
             pct = int((rp.score / tq) * 100) if tq > 0 else 0
             pct = min(pct, 100)
             recent_lessons.append({
@@ -120,8 +119,8 @@ def dashboard():
                 'completed_at': rp.completed_at
             })
 
-    # Прогресс по навыкам
-    all_skills = Skill.query.order_by(Skill.order).all()
+    # Прогресс по навыкам - eager loading уроков и тем
+    all_skills = Skill.query.options(db.joinedload(Skill.lessons).joinedload(Lesson.topics)).order_by(Skill.order).all()
     skill_progress = []
     for skill in all_skills:
         total = Lesson.query.filter_by(skill_id=skill.id).count()
@@ -171,7 +170,8 @@ def dashboard():
         skill_lessons = Lesson.query.filter_by(skill_id=skill.id).order_by(Lesson.order).all()
         for lesson in skill_lessons:
             progress = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
-            total_q = len(lesson.topics) + len(lesson.questions)
+            topic_q_count = sum(1 for t in lesson.topics if t.question and t.question.get('text'))
+            total_q = topic_q_count + len(lesson.questions)
             if progress and total_q > 0:
                 percent = (progress.score / total_q) * 100
                 status = 'completed' if percent >= 70 else 'started'
@@ -313,7 +313,10 @@ def skills():
     progress = {}
     for p in progress_records:
         lesson = Lesson.query.get(p.lesson_id)
-        total_q = (len(lesson.topics) + len(lesson.questions)) if lesson else 0
+        # Считаем только темы с реальными вопросами (как в submit_lesson)
+        topic_q_count = sum(1 for t in lesson.topics if t.question and t.question.get('text')) if lesson else 0
+        question_count = len(lesson.questions) if lesson else 0
+        total_q = topic_q_count + question_count
         progress[p.lesson_id] = {
             'score': p.score,
             'completed': p.completed,
@@ -348,7 +351,8 @@ def skills():
         total_q_all = 0
         for lesson in lessons:
             progress_rec = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
-            total_q = len(lesson.topics) + len(lesson.questions)
+            topic_q_count = sum(1 for t in lesson.topics if t.question and t.question.get('text'))
+            total_q = topic_q_count + len(lesson.questions)
             total_q_all += total_q
             if progress_rec:
                 total_correct += progress_rec.score
@@ -574,6 +578,8 @@ def submit_lesson(lesson_id):
 
     # Порог 70% для начисления XP
     xp_reward = lesson.xp_reward if percentage >= 70 else 0
+
+    print(f"[SUBMIT] lesson_id={lesson_id} user_id={current_user.id} correct={correct_count} total={total_questions} pct={percentage}% xp={xp_reward} existing={existing is not None}")
 
     # Сохраняем / обновляем прогресс
     if existing:

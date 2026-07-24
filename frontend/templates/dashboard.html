@@ -111,6 +111,7 @@
 
         <!-- Тепловая карта прогресса -->
         {% if skills and heatmap_data %}
+            <!-- DEBUG: skills={{ skills|length }}, heatmap_data keys={{ heatmap_data.keys()|list|length }} -->
             {% set active_count = 0 %}
             {% for lesson_id, data in heatmap_data.items() %}
                 {% if data.status != 'not_started' %}
