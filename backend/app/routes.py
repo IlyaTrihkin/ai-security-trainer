@@ -15,7 +15,7 @@ import uuid
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 from . import db
-from .models import User, Skill, Lesson, UserProgress, Question, Achievement, Topic, UserAchievement
+from .models import User, Skill, Lesson, UserProgress, Question, Achievement, Topic, UserAchievement, NewsArticle
 from .gamification import check_achievements
 from .yandex_gpt import generate_questions, generate_answer
 
@@ -680,3 +680,25 @@ def generate_questions_route(lesson_id):
         return jsonify({'error': 'Не удалось сгенерировать вопросы. Попробуйте позже.'}), 500
 
     return jsonify({'questions': questions, 'success': True})
+
+
+@bp.route('/news')
+@bp.route('/news/<lang>')
+@login_required
+def news(lang='ru'):
+    """Страница новостей с переключением языка"""
+    if lang not in ('ru', 'en'):
+        lang = 'ru'
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    pagination = NewsArticle.query.filter_by(language=lang)\
+        .order_by(NewsArticle.published.desc())\
+        .paginate(page=page, per_page=per_page, error_out=False)
+    articles = pagination.items
+    return render_template(
+        'news.html',
+        articles=articles,
+        pagination=pagination,
+        lang=lang,
+        user=current_user
+    )

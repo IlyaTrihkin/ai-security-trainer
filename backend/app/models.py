@@ -89,3 +89,13 @@ class UserAchievement(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     achievement_id = db.Column(db.Integer, db.ForeignKey('achievement.id'), nullable=False)
     unlocked_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class NewsArticle(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(500), nullable=False)
+    link = db.Column(db.String(500), nullable=False, unique=True)
+    summary = db.Column(db.Text, nullable=True)
+    published = db.Column(db.DateTime, nullable=True)
+    source = db.Column(db.String(100), nullable=False)
+    language = db.Column(db.String(2), nullable=False, default='en')
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())

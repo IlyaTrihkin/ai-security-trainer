@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}Новости кибербезопасности{% endblock %}
+{% block content %}
+<div class="news-page">
+    <h1 class="page-title">📰 Новости кибербезопасности</h1>
+
+    <div class="lang-switcher">
+        <a href="{{ url_for('main.news', lang='ru') }}" class="btn btn-sm {% if lang == 'ru' %}btn-primary{% else %}btn-outline{% endif %}">🇷🇺 Русский</a>
+        <a href="{{ url_for('main.news', lang='en') }}" class="btn btn-sm {% if lang == 'en' %}btn-primary{% else %}btn-outline{% endif %}">🇬🇧 English</a>
+    </div>
+
+    {% if articles %}
+        <div class="articles-list">
+            {% for article in articles %}
+                <div class="article-card">
+                    <div class="article-header">
+                        <span class="article-source">{{ article.source }}</span>
+                        <span class="article-date">{{ article.published.strftime('%d.%m.%Y %H:%M') if article.published else '' }}</span>
+                    </div>
+                    <h3 class="article-title">
+                        <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a>
+                    </h3>
+                    {% if article.summary %}
+                        <p class="article-summary">{{ article.summary }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                    <a href="{{ url_for('main.news', lang=lang, page=pagination.prev_num) }}" class="page-link">&laquo; Назад</a>
+                {% endif %}
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <a href="{{ url_for('main.news', lang=lang, page=page_num) }}" class="page-link {% if page_num == pagination.page %}active{% endif %}">{{ page_num }}</a>
+                    {% else %}
+                        <span class="page-ellipsis">…</span>
+                    {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                    <a href="{{ url_for('main.news', lang=lang, page=pagination.next_num) }}" class="page-link">Вперёд &raquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <p>Пока нет новостей. Они появятся после первого обновления RSS-лент.</p>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .news-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .page-title {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #e0e0e0;
+    }
+    .lang-switcher {
+        text-align: center;
+        margin-bottom: 25px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+    .articles-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    .article-card {
+        background: #1e1e2e;
+        border: 1px solid #333;
+        border-radius: 10px;
+        padding: 16px 20px;
+        transition: border-color 0.2s;
+    }
+    .article-card:hover {
+        border-color: #6c5ce7;
+    }
+    .article-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+        color: #888;
+    }
+    .article-source {
+        background: #2d2d44;
+        padding: 2px 10px;
+        border-radius: 4px;
+        color: #a29bfe;
+        font-weight: 500;
+    }
+    .article-title {
+        margin: 0 0 6px 0;
+        font-size: 1.15rem;
+        line-height: 1.4;
+    }
+    .article-title a {
+        color: #dfe6e9;
+        text-decoration: none;
+    }
+    .article-title a:hover {
+        color: #a29bfe;
+    }
+    .article-summary {
+        color: #aaa;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #888;
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+    .page-link {
+        padding: 6px 14px;
+        border-radius: 6px;
+        background: #2d2d44;
+        color: #ccc;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+    .page-link:hover {
+        background: #3d3d5c;
+    }
+    .page-link.active {
+        background: #6c5ce7;
+        color: #fff;
+    }
+    .page-ellipsis {
+        padding: 6px 10px;
+        color: #888;
+    }
+</style>
+{% endblock %}

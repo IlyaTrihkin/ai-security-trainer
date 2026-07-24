@@ -47,6 +47,30 @@ def create_app():
     from .admin import admin_bp
     app.register_blueprint(admin_bp)
 
+    # Инициализация планировщика для обновления RSS-новостей
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from .news_fetcher import fetch_all_news, fetch_news_for_language
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        func=fetch_all_news,
+        trigger='interval',
+        minutes=30,
+        id='fetch_all_news',
+        replace_existing=True
+    )
+    scheduler.start()
+
+    # Первичная загрузка новостей при старте (в фоне, с контекстом приложения)
+    import threading
+    def initial_fetch():
+        with app.app_context():
+            fetch_all_news()
+
+    thread = threading.Thread(target=initial_fetch)
+    thread.daemon = True
+    thread.start()
+
     return app
 
 @login_manager.user_loader
