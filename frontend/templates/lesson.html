@@ -623,6 +623,13 @@
     var userAnswers = [];
     var currentAnswerLocked = false;
 
+    // --- БОНУСНЫЕ ВОПРОСЫ (YandexGPT) ---
+    var bonusQuestions = [];
+    var bonusUserAnswers = [];
+    var bonusCurrentQuestion = 0;
+    var bonusAnswerLocked = false;
+    var originalResult = null;
+
     // --- DOM ---
     var $lecturePhase = document.getElementById('lecturePhase');
     var $quizPhase = document.getElementById('quizPhase');
@@ -1009,6 +1016,9 @@
         html += '<button id="generateQuestionsBtn" class="btn-nav btn-nav-next" style="margin-top: 20px; width: auto; display: inline-flex; padding: 12px 28px;">🤖 Сгенерировать дополнительные вопросы</button>';
         html += '<div id="generatedQuestionsContainer" style="margin-top: 15px; text-align: left;"></div>';
 
+        // Сохраняем оригинальный результат для пересчёта
+        originalResult = data;
+
         document.getElementById('resultsScreen').innerHTML = html;
 
         // Навешиваем обработчик на кнопку генерации
@@ -1029,47 +1039,28 @@
                         genBtn.textContent = '🤖 Сгенерировать дополнительные вопросы';
 
                         if (data.success && data.questions && data.questions.length > 0) {
-                            var addedCount = 0;
-                            data.questions.forEach(function(q) {
-                                // Проверяем, что вопрос валидный
+                            // Заменяем старые бонусные вопросы новыми
+                            bonusQuestions = [];
+                            bonusUserAnswers = [];
+
+                            data.questions.forEach(function(q, idx) {
                                 if (!q.text || !q.options || q.options.length < 2) return;
-                                allQuestions.push({
-                                    id: 'generated_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                                    topic_id: null,
+                                bonusQuestions.push({
+                                    id: 'bonus_' + idx,
                                     text: q.text,
                                     options: q.options,
                                     correct: q.correct_answer,
                                     explanation: q.explanation || ''
                                 });
-                                addedCount++;
+                                bonusUserAnswers.push(null); // ещё не отвечено
                             });
 
-                            // Обновляем общее количество вопросов
-                            totalQuizQuestions = allQuestions.length;
+                            bonusCurrentQuestion = 0;
+                            bonusAnswerLocked = false;
 
-                            // Обновляем прогресс-бар
-                            updateProgress();
-
-                            // Показываем уведомление
-                            var container = document.getElementById('generatedQuestionsContainer');
-                            var isQuizActive = (phase === 'quiz');
-
-                            if (isQuizActive) {
-                                // Тест уже идёт — вопросы будут доступны при следующей попытке
-                                container.innerHTML = '<div style="padding: 12px; background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); border-radius: 10px; color: #ffc107; text-align: center;">⚠️ Вопросы добавлены (' + addedCount + ' шт.), но вы уже проходите тест.<br>Они будут доступны при следующей попытке прохождения урока.</div>';
-                            } else {
-                                // Тест ещё не начался или уже завершён
-                                var msg = '✅ Добавлено ' + addedCount + ' вопросов! Теперь всего: ' + totalQuizQuestions;
-                                container.innerHTML = '<div style="padding: 12px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 10px; color: #2ecc71; text-align: center;">' + msg + '</div>';
-
-                                // Если пользователь на странице результатов, обновляем кнопку сброса
-                                if (phase === 'results') {
-                                    var resetBtn = document.getElementById('resetLessonBtn');
-                                    if (resetBtn) {
-                                        resetBtn.style.display = '';
-                                    }
-                                }
-                            }
+                            // Скрываем кнопку генерации, показываем первый бонусный вопрос
+                            genBtn.style.display = 'none';
+                            showBonusQuestion();
                         } else {
                             var container = document.getElementById('generatedQuestionsContainer');
                             container.innerHTML = '<div style="padding: 12px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; color: #e74c3c; text-align: center;">❌ ' + (data.error || 'Не удалось сгенерировать вопросы. Попробуйте позже.') + '</div>';
@@ -1078,7 +1069,8 @@
                     .catch(function(err) {
                         genBtn.disabled = false;
                         genBtn.textContent = '🤖 Сгенерировать дополнительные вопросы';
-                        alert('Ошибка запроса: ' + err);
+                        var container = document.getElementById('generatedQuestionsContainer');
+                        container.innerHTML = '<div style="padding: 12px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; color: #e74c3c; text-align: center;">❌ Ошибка запроса. Попробуйте позже.</div>';
                     });
                 });
             }
@@ -1091,6 +1083,200 @@
         }
 
         updateProgress();
+    }
+
+    // --- БОНУСНЫЕ ВОПРОСЫ: отображение ---
+    function showBonusQuestion() {
+        if (bonusQuestions.length === 0 || bonusCurrentQuestion >= bonusQuestions.length) {
+            // Все бонусные вопросы отвечены — показываем кнопку пересчёта
+            showBonusRecalculateButton();
+            return;
+        }
+
+        var q = bonusQuestions[bonusCurrentQuestion];
+        bonusAnswerLocked = false;
+        var container = document.getElementById('generatedQuestionsContainer');
+
+        var html = '<h3 style="color: #e8edf5; margin-bottom: 16px; font-size: 16px;">📝 Дополнительный вопрос ' + (bonusCurrentQuestion + 1) + ' из ' + bonusQuestions.length + '</h3>';
+        html += '<div class="question-block" style="animation: fadeSlide 0.35s ease;">';
+        html += '<p class="question-text" style="font-size: 16px;">' + q.text + '</p>';
+        html += '<div class="options-list" id="bonusOptionsList">';
+
+        var letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+        q.options.forEach(function(opt, idx) {
+            html +=
+                '<button class="option-btn" data-bonus-index="' + idx + '">' +
+                '<span class="option-letter">' + (letters[idx] || idx) + '</span>' +
+                '<span>' + opt + '</span>' +
+                '</button>';
+        });
+
+        html += '</div>';
+        html += '<div id="bonusFeedback" style="margin-top: 16px;"></div>';
+        html += '</div>';
+
+        container.innerHTML = html;
+
+        // Навешиваем обработчики на кнопки вариантов
+        var optionButtons = document.querySelectorAll('#bonusOptionsList .option-btn');
+        optionButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (bonusAnswerLocked) return;
+                bonusAnswerLocked = true;
+                handleBonusOptionSelect(btn);
+            });
+        });
+    }
+
+    function handleBonusOptionSelect(selectedBtn) {
+        var selectedIndex = parseInt(selectedBtn.getAttribute('data-bonus-index'));
+        var q = bonusQuestions[bonusCurrentQuestion];
+        var correctIndex = q.correct;
+        var isCorrect = (selectedIndex === correctIndex);
+
+        // Сохраняем ответ
+        bonusUserAnswers[bonusCurrentQuestion] = {
+            selected: selectedIndex,
+            correct: correctIndex,
+            isCorrect: isCorrect
+        };
+
+        // Визуальная обратная связь
+        var allBtns = document.querySelectorAll('#bonusOptionsList .option-btn');
+        allBtns.forEach(function(btn) {
+            btn.classList.add('disabled');
+        });
+
+        if (isCorrect) {
+            selectedBtn.classList.add('selected-correct');
+        } else {
+            selectedBtn.classList.add('selected-wrong');
+            allBtns.forEach(function(btn) {
+                var idx = parseInt(btn.getAttribute('data-bonus-index'));
+                if (idx === correctIndex) {
+                    btn.classList.add('correct-reveal');
+                }
+            });
+        }
+
+        // Пояснение
+        var fbHtml = '';
+        if (isCorrect) {
+            fbHtml = '<div class="feedback correct"><strong>✅ ВЕРНО!</strong>';
+            if (q.explanation) fbHtml += ' ' + q.explanation;
+            fbHtml += '</div>';
+        } else {
+            fbHtml = '<div class="feedback wrong"><strong>❌ НЕВЕРНО!</strong>';
+            var correctText = q.options[correctIndex] || '';
+            fbHtml += ' Правильный ответ: <strong>' + correctText + '</strong>.';
+            if (q.explanation) fbHtml += ' ' + q.explanation;
+            fbHtml += '</div>';
+        }
+        document.getElementById('bonusFeedback').innerHTML = fbHtml;
+
+        // Кнопка «Далее»
+        var container = document.getElementById('generatedQuestionsContainer');
+        var nextBtnHtml = '';
+        if (bonusCurrentQuestion < bonusQuestions.length - 1) {
+            nextBtnHtml = '<button id="bonusNextBtn" class="btn-nav btn-nav-next" style="margin-top: 16px; width: auto; display: inline-flex; padding: 10px 24px;">Следующий вопрос →</button>';
+        } else {
+            nextBtnHtml = '<button id="bonusRecalculateBtn" class="btn-nav btn-nav-next" style="margin-top: 16px; width: auto; display: inline-flex; padding: 10px 24px;">🔄 Пересчитать результат</button>';
+        }
+        container.insertAdjacentHTML('beforeend', nextBtnHtml);
+
+        // Обработчик кнопки «Далее»
+        var nextBtn = document.getElementById('bonusNextBtn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function() {
+                bonusCurrentQuestion++;
+                showBonusQuestion();
+            });
+        }
+
+        // Обработчик кнопки «Пересчитать»
+        var recalcBtn = document.getElementById('bonusRecalculateBtn');
+        if (recalcBtn) {
+            recalcBtn.addEventListener('click', recalculateResult);
+        }
+    }
+
+    function showBonusRecalculateButton() {
+        var container = document.getElementById('generatedQuestionsContainer');
+        // Подсчитываем бонусные результаты
+        var bonusCorrect = bonusUserAnswers.filter(function(a) { return a && a.isCorrect; }).length;
+        var bonusTotal = bonusQuestions.length;
+
+        var html = '<div style="padding: 16px; background: rgba(74,124,247,0.06); border: 1px solid rgba(74,124,247,0.2); border-radius: 12px; text-align: center;">';
+        html += '<p style="color: #e8edf5; margin: 0 0 12px 0;">📊 Бонусные вопросы: <strong>' + bonusCorrect + '</strong> из <strong>' + bonusTotal + '</strong> правильно</p>';
+        html += '<button id="bonusRecalculateBtn" class="btn-nav btn-nav-next" style="width: auto; display: inline-flex; padding: 12px 28px;">🔄 Пересчитать результат</button>';
+        html += '</div>';
+
+        container.innerHTML = html;
+
+        var recalcBtn = document.getElementById('bonusRecalculateBtn');
+        if (recalcBtn) {
+            recalcBtn.addEventListener('click', recalculateResult);
+        }
+    }
+
+    function recalculateResult() {
+        if (!originalResult) return;
+
+        var bonusCorrect = bonusUserAnswers.filter(function(a) { return a && a.isCorrect; }).length;
+        var bonusTotal = bonusQuestions.length;
+
+        var mainCorrect = originalResult.correct_count;
+        var mainTotal = originalResult.total_questions;
+
+        var newCorrect = mainCorrect + bonusCorrect;
+        var newTotal = mainTotal + bonusTotal;
+        var newPct = newTotal > 0 ? Math.round((newCorrect / newTotal) * 100) : 0;
+        var passed = newPct >= 70;
+        var icon = passed ? '🎉' : '😔';
+        var title = passed ? 'Отличная работа!' : 'Попробуйте ещё раз';
+
+        // Пересчитываем XP (упрощённо: если изначально XP не было и новый порог > 70 — начисляем)
+        var xpEarned = 0;
+        if (passed && originalResult.xp_earned === 0) {
+            xpEarned = 50; // базовое значение XP
+        } else if (originalResult.xp_earned > 0) {
+            xpEarned = originalResult.xp_earned;
+        }
+
+        var html = '<div id="bonusResultBlock">';
+        html += '<div class="results-icon">' + icon + '</div>';
+        html += '<h3 style="margin: 0 0 8px 0; font-size: 24px; color: #e8edf5;">' + title + '</h3>';
+        html += '<div class="results-score">' + newPct + '%</div>';
+        html += '<div class="results-detail">' + newCorrect + ' из ' + newTotal + ' правильных ответов</div>';
+        html += '<div style="color: #8b9bb5; font-size: 13px; margin-bottom: 16px;">(основной тест: ' + mainCorrect + '/' + mainTotal + ' + бонус: ' + bonusCorrect + '/' + bonusTotal + ')</div>';
+
+        html += '<div class="results-stats">';
+        html += '<div class="results-stat"><div class="results-stat-value green">' + newCorrect + '</div><div class="results-stat-label">Всего правильно</div></div>';
+        html += '<div class="results-stat"><div class="results-stat-value red">' + (newTotal - newCorrect) + '</div><div class="results-stat-label">Неправильно</div></div>';
+        html += '</div>';
+
+        if (xpEarned > 0) {
+            html += '<div class="results-xp">⭐ +' + xpEarned + ' XP начислено!</div>';
+        } else if (!passed) {
+            html += '<div style="color: #e74c3c; font-weight: 500; margin-bottom: 16px;">😔 К сожалению, ' + newPct + '% всё ещё меньше 70%. Попробуйте ещё раз позже.</div>';
+        }
+
+        html += '<p style="color: #8b9bb5; font-size: 13px; margin: 20px 0;">Дополнительные вопросы не сохраняются в БД — результат пересчитан локально.</p>';
+
+        html += '<div class="results-actions" style="margin-top: 20px;">';
+        html += '<a href="' + skillsUrl + '" class="btn btn-outline">← Вернуться к навыкам</a>';
+        html += '</div>';
+
+        html += '</div>';
+
+        // Заменяем блок результатов на новый
+        document.getElementById('resultsScreen').innerHTML = html;
+        document.getElementById('generatedQuestionsContainer').innerHTML = '';
+
+        // Конфетти при высоком результате
+        if (newPct >= 80 && typeof confetti === 'function') {
+            setTimeout(function() { confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }, 300);
+        }
     }
 
     // --- ЗАПУСК ---
