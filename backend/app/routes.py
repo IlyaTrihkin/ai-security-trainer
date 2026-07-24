@@ -165,6 +165,34 @@ def dashboard():
         db.func.date(UserProgress.completed_at) == today
     ).count()
 
+    # Данные для тепловой карты
+    heatmap_data = {}
+    for skill in all_skills:
+        skill_lessons = Lesson.query.filter_by(skill_id=skill.id).order_by(Lesson.order).all()
+        for lesson in skill_lessons:
+            progress = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
+            total_q = len(lesson.questions) if lesson.questions else 0
+            if progress and total_q > 0:
+                percent = (progress.score / total_q) * 100
+                status = 'completed' if percent >= 70 else 'started'
+                heatmap_data[lesson.id] = {
+                    'status': status,
+                    'percent': round(percent),
+                    'attempts': progress.attempts,
+                    'title': lesson.title,
+                    'skill_id': skill.id,
+                    'skill_name': skill.title
+                }
+            else:
+                heatmap_data[lesson.id] = {
+                    'status': 'not_started',
+                    'percent': 0,
+                    'attempts': 0,
+                    'title': lesson.title,
+                    'skill_id': skill.id,
+                    'skill_name': skill.title
+                }
+
     return render_template(
         'dashboard.html',
         user=current_user,
@@ -176,7 +204,9 @@ def dashboard():
         skill_progress=skill_progress,
         achievements=achievement_details,
         today_count=today_count,
-        has_progress=completed_lessons > 0
+        has_progress=completed_lessons > 0,
+        skills=all_skills,
+        heatmap_data=heatmap_data
     )
 
 @bp.route('/logout')
@@ -307,13 +337,38 @@ def skills():
         if key not in levels:
             levels.append(key)
 
+    # Данные для тепловой карты навыков
+    skill_heatmap = {}
+    for skill in all_skills:
+        lessons = Lesson.query.filter_by(skill_id=skill.id).order_by(Lesson.order).all()
+        progress_list = []
+        for lesson in lessons:
+            progress_rec = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
+            total_q = len(lesson.questions) if lesson.questions else 0
+            if progress_rec and total_q > 0:
+                percent = (progress_rec.score / total_q) * 100
+                status = 'completed' if percent >= 70 else 'started'
+            else:
+                percent = 0
+                status = 'not_started'
+            progress_list.append({
+                'lesson_id': lesson.id,
+                'title': lesson.title,
+                'status': status,
+                'percent': round(percent),
+                'attempts': progress_rec.attempts if progress_rec else 0,
+                'total_questions': total_q
+            })
+        skill_heatmap[skill.id] = progress_list
+
     return render_template(
         'skills.html',
         grouped_skills=grouped,
         levels=levels,
         completed_lessons=completed_lessons,
         progress=progress,
-        user=current_user
+        user=current_user,
+        skill_heatmap=skill_heatmap
     )
 
 @bp.route('/lesson/<int:lesson_id>')

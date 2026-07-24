@@ -109,6 +109,47 @@
             </div>
         </div>
 
+        <!-- Тепловая карта прогресса -->
+        {% if skills and heatmap_data %}
+        <div class="heatmap-container" style="margin-bottom: 24px;">
+            <h3 style="margin-bottom: 16px;">🗺️ Тепловая карта прогресса</h3>
+            <div class="heatmap-grid">
+                {% for skill in skills %}
+                    {% set skill_has_lessons = false %}
+                    {% for lesson in skill.lessons %}
+                        {% if heatmap_data.get(lesson.id) %}
+                            {% set skill_has_lessons = true %}
+                        {% endif %}
+                    {% endfor %}
+                    {% if skill_has_lessons %}
+                    <div class="heatmap-row">
+                        <div class="heatmap-label">{{ skill.icon }} {{ skill.title }}</div>
+                        <div class="heatmap-cells">
+                            {% for lesson in skill.lessons %}
+                                {% set data = heatmap_data.get(lesson.id) %}
+                                {% if data %}
+                                <div class="heatmap-cell status-{{ data.status }}"
+                                     data-title="{{ data.title }}"
+                                     data-percent="{{ data.percent }}"
+                                     data-attempts="{{ data.attempts }}"
+                                     onclick="location.href='{{ url_for('main.lesson', lesson_id=lesson.id) }}'"
+                                     title="{{ data.title }} — {{ data.percent }}%, попыток: {{ data.attempts }}">
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <div class="heatmap-legend">
+                <span class="legend-completed">Пройдено (≥70%)</span>
+                <span class="legend-started">В процессе</span>
+                <span class="legend-not-started">Не начато</span>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Достижения + быстрые ссылки -->
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
             <div class="card" style="grid-column: span 2;">

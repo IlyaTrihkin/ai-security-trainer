@@ -49,13 +49,26 @@
                                 </div>
                             </div>
 
-                            {% if skill.description %}
-                                <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; flex: 1;">
-                                    {{ skill.description }}
-                                </p>
-                            {% endif %}
+                             {% if skill.description %}
+                                 <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px; flex: 1;">
+                                     {{ skill.description }}
+                                 </p>
+                             {% endif %}
 
-                            <!-- Уроки с прогрессом -->
+                             <!-- Тепловая карта уроков навыка -->
+                             {% if skill_heatmap.get(skill.id) %}
+                             <div class="skill-heatmap-mini" style="margin-bottom: 12px;">
+                                 {% for item in skill_heatmap[skill.id] %}
+                                 <a href="{{ url_for('main.lesson', lesson_id=item.lesson_id) }}"
+                                    class="hm-cell status-{{ item.status }}"
+                                    title="{{ item.title }} — {{ item.percent }}%"
+                                    style="display: inline-block; width: 24px; height: 24px; border-radius: 4px; margin: 2px; transition: transform 0.2s;">
+                                 </a>
+                                 {% endfor %}
+                             </div>
+                             {% endif %}
+
+                             <!-- Уроки с прогрессом -->
                             <div style="margin-top: auto;">
                                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                                     <span style="font-size: 13px; color: var(--text-secondary);">
