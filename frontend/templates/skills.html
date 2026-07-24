@@ -66,32 +66,6 @@
                                   </div>
                               </div>
 
-                              <!-- Прогресс уроков навыка -->
-                             {% if skill_heatmap.get(skill.id) %}
-                             <div class="skill-heatmap-mini" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px;">
-                                 {% for item in skill_heatmap[skill.id] %}
-                                 <a href="{{ url_for('main.lesson', lesson_id=item.lesson_id) }}"
-                                    class="lesson-progress-link"
-                                    style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; text-decoration: none; border-radius: 6px; background: var(--bg-secondary); transition: background 0.2s;">
-                                     <span style="font-size: 12px; color: var(--text-primary); min-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                         {{ item.title }}
-                                     </span>
-                                     <div style="flex: 1; background: var(--bg-card); height: 6px; border-radius: 3px; overflow: hidden;">
-                                         <div style="width: {{ item.percent }}%; height: 100%;
-                                             {% if item.status == 'completed' %}background: var(--green);
-                                             {% elif item.status == 'started' %}background: #f39c12;
-                                             {% else %}background: var(--border-color);{% endif %}
-                                             border-radius: 3px; transition: width 0.3s;">
-                                         </div>
-                                     </div>
-                                     <span style="font-size: 11px; color: var(--text-secondary); min-width: 40px; text-align: right;">
-                                         {{ item.percent }}%
-                                     </span>
-                                 </a>
-                                 {% endfor %}
-                             </div>
-                             {% endif %}
-
                              <!-- Уроки с прогрессом -->
                             <div style="margin-top: auto;">
                                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">

@@ -111,8 +111,15 @@
 
         <!-- Тепловая карта прогресса -->
         {% if skills and heatmap_data %}
+            {% set active_count = 0 %}
+            {% for lesson_id, data in heatmap_data.items() %}
+                {% if data.status != 'not_started' %}
+                    {% set active_count = active_count + 1 %}
+                {% endif %}
+            {% endfor %}
         <div class="heatmap-container" style="margin-bottom: 24px;">
             <h3 style="margin-bottom: 16px;">🗺️ Тепловая карта прогресса</h3>
+            {% if active_count > 0 %}
             <div class="heatmap-grid">
                 {% for skill in skills %}
                     {% set skill_has_lessons = false %}
@@ -147,6 +154,14 @@
                 <span class="legend-started">В процессе</span>
                 <span class="legend-not-started">Не начато</span>
             </div>
+            {% else %}
+            <div class="empty-state" style="padding: 30px 0;">
+                <span style="font-size: 48px;">🗺️</span>
+                <p style="color: var(--text-secondary); margin-top: 12px;">
+                    Пройдите уроки, чтобы заполнить тепловую карту
+                </p>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 

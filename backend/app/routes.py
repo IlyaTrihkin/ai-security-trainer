@@ -193,6 +193,7 @@ def dashboard():
                     'skill_name': skill.title
                 }
 
+    print("HEATMAP_DATA:", heatmap_data)
     return render_template(
         'dashboard.html',
         user=current_user,
