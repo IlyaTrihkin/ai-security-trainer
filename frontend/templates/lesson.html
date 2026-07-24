@@ -1005,7 +1005,57 @@
         {% endif %}
         html += '</div>';
 
+        // Кнопка генерации дополнительных вопросов
+        html += '<button id="generateQuestionsBtn" class="btn-nav btn-nav-next" style="margin-top: 20px; width: auto; display: inline-flex; padding: 12px 28px;">🤖 Сгенерировать дополнительные вопросы</button>';
+        html += '<div id="generatedQuestionsContainer" style="margin-top: 15px; text-align: left;"></div>';
+
         document.getElementById('resultsScreen').innerHTML = html;
+
+        // Навешиваем обработчик на кнопку генерации
+        setTimeout(function() {
+            var genBtn = document.getElementById('generateQuestionsBtn');
+            if (genBtn) {
+                genBtn.addEventListener('click', function() {
+                    genBtn.disabled = true;
+                    genBtn.textContent = '⏳ Генерация...';
+
+                    fetch('/generate_questions/' + lessonId, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'}
+                    })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        genBtn.disabled = false;
+                        genBtn.textContent = '🤖 Сгенерировать дополнительные вопросы';
+
+                        if (data.success) {
+                            var container = document.getElementById('generatedQuestionsContainer');
+                            var html2 = '<h3 style="color: #e8edf5; margin-bottom: 12px;">📝 Дополнительные вопросы:</h3>';
+                            data.questions.forEach(function(q, index) {
+                                html2 += '<div style="margin: 10px 0; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;">';
+                                html2 += '<p style="color: #e8edf5; margin: 0 0 10px 0;"><strong>Вопрос ' + (index + 1) + ':</strong> ' + q.text + '</p>';
+                                html2 += '<ul style="color: #c8d2e0; padding-left: 20px; margin: 0 0 10px 0;">';
+                                q.options.forEach(function(opt, i) {
+                                    html2 += '<li>' + opt + '</li>';
+                                });
+                                html2 += '</ul>';
+                                html2 += '<p style="color: #2ecc71; margin: 0 0 4px 0;"><strong>✅ Правильный ответ:</strong> ' + q.options[q.correct_answer] + '</p>';
+                                html2 += '<p style="color: #8b9bb5; margin: 0; font-style: italic;">💡 ' + (q.explanation || '') + '</p>';
+                                html2 += '</div>';
+                            });
+                            container.innerHTML = html2;
+                        } else {
+                            alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                        }
+                    })
+                    .catch(function(err) {
+                        genBtn.disabled = false;
+                        genBtn.textContent = '🤖 Сгенерировать дополнительные вопросы';
+                        alert('Ошибка запроса: ' + err);
+                    });
+                });
+            }
+        }, 100);
         $resultsPhase.classList.remove('hidden');
 
         // Конфетти при высоком результате

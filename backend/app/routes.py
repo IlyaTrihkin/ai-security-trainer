@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 from . import db
 from .models import User, Skill, Lesson, UserProgress, Question, Achievement, Topic, UserAchievement
 from .gamification import check_achievements
+from .yandex_gpt import generate_questions
 
 bp = Blueprint('main', __name__)
 
@@ -657,3 +658,23 @@ def ai_ask():
     return jsonify({
         'answer': f'🤖 Хороший вопрос! Пока я ещё учусь, но скоро буду отвечать на все вопросы по ИБ. Твой вопрос: "{question}" (контекст: {context})'
     })
+
+
+@bp.route('/generate_questions/<int:lesson_id>', methods=['POST'])
+@login_required
+def generate_questions_route(lesson_id):
+    """Генерация дополнительных вопросов через YandexGPT"""
+    lesson = Lesson.query.get_or_404(lesson_id)
+    topics = Topic.query.filter_by(lesson_id=lesson.id).order_by(Topic.order).all()
+    if not topics:
+        return jsonify({'error': 'У этого урока нет тем'}), 400
+
+    # Используем текст первой темы как контекст для генерации
+    topic_text = topics[0].content[:500]  # ограничиваем длину
+
+    try:
+        questions = generate_questions(topic_text, lesson.title, count=3)
+        return jsonify({'questions': questions, 'success': True})
+    except Exception as e:
+        logger.error("Ошибка генерации вопросов: %s", e)
+        return jsonify({'error': str(e)}), 500
