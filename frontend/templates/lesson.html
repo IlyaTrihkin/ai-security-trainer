@@ -1028,24 +1028,51 @@
                         genBtn.disabled = false;
                         genBtn.textContent = '🤖 Сгенерировать дополнительные вопросы';
 
-                        if (data.success) {
-                            var container = document.getElementById('generatedQuestionsContainer');
-                            var html2 = '<h3 style="color: #e8edf5; margin-bottom: 12px;">📝 Дополнительные вопросы:</h3>';
-                            data.questions.forEach(function(q, index) {
-                                html2 += '<div style="margin: 10px 0; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;">';
-                                html2 += '<p style="color: #e8edf5; margin: 0 0 10px 0;"><strong>Вопрос ' + (index + 1) + ':</strong> ' + q.text + '</p>';
-                                html2 += '<ul style="color: #c8d2e0; padding-left: 20px; margin: 0 0 10px 0;">';
-                                q.options.forEach(function(opt, i) {
-                                    html2 += '<li>' + opt + '</li>';
+                        if (data.success && data.questions && data.questions.length > 0) {
+                            var addedCount = 0;
+                            data.questions.forEach(function(q) {
+                                // Проверяем, что вопрос валидный
+                                if (!q.text || !q.options || q.options.length < 2) return;
+                                allQuestions.push({
+                                    id: 'generated_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                                    topic_id: null,
+                                    text: q.text,
+                                    options: q.options,
+                                    correct: q.correct_answer,
+                                    explanation: q.explanation || ''
                                 });
-                                html2 += '</ul>';
-                                html2 += '<p style="color: #2ecc71; margin: 0 0 4px 0;"><strong>✅ Правильный ответ:</strong> ' + q.options[q.correct_answer] + '</p>';
-                                html2 += '<p style="color: #8b9bb5; margin: 0; font-style: italic;">💡 ' + (q.explanation || '') + '</p>';
-                                html2 += '</div>';
+                                addedCount++;
                             });
-                            container.innerHTML = html2;
+
+                            // Обновляем общее количество вопросов
+                            totalQuizQuestions = allQuestions.length;
+
+                            // Обновляем прогресс-бар
+                            updateProgress();
+
+                            // Показываем уведомление
+                            var container = document.getElementById('generatedQuestionsContainer');
+                            var isQuizActive = (phase === 'quiz');
+
+                            if (isQuizActive) {
+                                // Тест уже идёт — вопросы будут доступны при следующей попытке
+                                container.innerHTML = '<div style="padding: 12px; background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); border-radius: 10px; color: #ffc107; text-align: center;">⚠️ Вопросы добавлены (' + addedCount + ' шт.), но вы уже проходите тест.<br>Они будут доступны при следующей попытке прохождения урока.</div>';
+                            } else {
+                                // Тест ещё не начался или уже завершён
+                                var msg = '✅ Добавлено ' + addedCount + ' вопросов! Теперь всего: ' + totalQuizQuestions;
+                                container.innerHTML = '<div style="padding: 12px; background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.3); border-radius: 10px; color: #2ecc71; text-align: center;">' + msg + '</div>';
+
+                                // Если пользователь на странице результатов, обновляем кнопку сброса
+                                if (phase === 'results') {
+                                    var resetBtn = document.getElementById('resetLessonBtn');
+                                    if (resetBtn) {
+                                        resetBtn.style.display = '';
+                                    }
+                                }
+                            }
                         } else {
-                            alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+                            var container = document.getElementById('generatedQuestionsContainer');
+                            container.innerHTML = '<div style="padding: 12px; background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.3); border-radius: 10px; color: #e74c3c; text-align: center;">❌ ' + (data.error || 'Не удалось сгенерировать вопросы. Попробуйте позже.') + '</div>';
                         }
                     })
                     .catch(function(err) {
