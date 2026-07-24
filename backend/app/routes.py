@@ -171,8 +171,7 @@ def dashboard():
         skill_lessons = Lesson.query.filter_by(skill_id=skill.id).order_by(Lesson.order).all()
         for lesson in skill_lessons:
             progress = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
-            total_questions = Question.query.filter_by(lesson_id=lesson.id).count()
-            total_q = total_questions
+            total_q = len(lesson.topics) + len(lesson.questions)
             if progress and total_q > 0:
                 percent = (progress.score / total_q) * 100
                 status = 'completed' if percent >= 70 else 'started'
@@ -338,14 +337,20 @@ def skills():
         if key not in levels:
             levels.append(key)
 
-    # Данные для тепловой карты навыков
+    # Данные для тепловой карты навыков + процент навыка
     skill_heatmap = {}
+    skill_percents = {}
     for skill in all_skills:
         lessons = Lesson.query.filter_by(skill_id=skill.id).order_by(Lesson.order).all()
         progress_list = []
+        total_correct = 0
+        total_q_all = 0
         for lesson in lessons:
             progress_rec = UserProgress.query.filter_by(user_id=current_user.id, lesson_id=lesson.id).first()
-            total_q = len(lesson.questions) if lesson.questions else 0
+            total_q = len(lesson.topics) + len(lesson.questions)
+            total_q_all += total_q
+            if progress_rec:
+                total_correct += progress_rec.score
             if progress_rec and total_q > 0:
                 percent = (progress_rec.score / total_q) * 100
                 status = 'completed' if percent >= 70 else 'started'
@@ -361,6 +366,7 @@ def skills():
                 'total_questions': total_q
             })
         skill_heatmap[skill.id] = progress_list
+        skill_percents[skill.id] = round((total_correct / total_q_all) * 100) if total_q_all > 0 else 0
 
     return render_template(
         'skills.html',
@@ -369,7 +375,8 @@ def skills():
         completed_lessons=completed_lessons,
         progress=progress,
         user=current_user,
-        skill_heatmap=skill_heatmap
+        skill_heatmap=skill_heatmap,
+        skill_percents=skill_percents
     )
 
 @bp.route('/lesson/<int:lesson_id>')

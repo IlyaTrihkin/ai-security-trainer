@@ -940,123 +940,6 @@ select.form-control {
     color: var(--text-secondary);
 }
 
-/* ===== Тепловая карта прогресса ===== */
-.heatmap-container {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-}
-
-.heatmap-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.heatmap-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.heatmap-label {
-    min-width: 180px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-}
-
-.heatmap-cells {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-
-.heatmap-cell {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-    border: 2px solid transparent;
-}
-
-.heatmap-cell:hover {
-    transform: scale(1.25);
-    z-index: 2;
-    border-color: var(--accent);
-    box-shadow: 0 0 12px var(--accent-glow);
-}
-
-.heatmap-cell:active {
-    transform: scale(0.95);
-}
-
-/* Статусы ячеек */
-.status-completed {
-    background: var(--green);
-    opacity: 0.85;
-}
-.status-completed:hover {
-    opacity: 1;
-    background: #27ae60;
-}
-
-.status-started {
-    background: #f39c12;
-    opacity: 0.75;
-}
-.status-started:hover {
-    opacity: 1;
-    background: #e67e22;
-}
-
-.status-not_started {
-    background: var(--border-color);
-    opacity: 0.6;
-}
-.status-not_started:hover {
-    opacity: 0.9;
-}
-
-/* Легенда */
-.heatmap-legend {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-    margin-top: 16px;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-color);
-    font-size: 12px;
-    color: var(--text-secondary);
-    flex-wrap: wrap;
-}
-
-.heatmap-legend span::before {
-    content: '';
-    display: inline-block;
-    width: 14px;
-    height: 14px;
-    border-radius: 3px;
-    margin-right: 6px;
-    vertical-align: middle;
-}
-
-.legend-completed::before {
-    background: var(--green);
-}
-
-.legend-started::before {
-    background: #f39c12;
-}
-
-.legend-not-started::before {
-    background: var(--border-color);
-}
-
 /* Мини-тепловая карта в навыках */
 .skill-heatmap-mini {
     display: flex;
@@ -1090,5 +973,138 @@ select.form-control {
 }
 
 .hm-cell.status-not_started {
+    background: var(--border-color);
+}
+
+/* Прогресс-бары (единый стиль) */
+.progress-container {
+    width: 100%;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.progress-percent {
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 13px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Тепловая карта на дашборде */
+.heatmap-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+}
+
+.heatmap-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.heatmap-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.heatmap-label {
+    min-width: 180px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.heatmap-cells {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.heatmap-cell {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid transparent;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.25);
+    z-index: 2;
+    border-color: var(--accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.heatmap-cell.status-completed {
+    background: var(--green);
+}
+
+.heatmap-cell.status-started {
+    background: #f39c12;
+}
+
+.heatmap-cell.status-not_started {
+    background: var(--border-color);
+}
+
+.heatmap-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.legend-completed::before,
+.legend-started::before,
+.legend-not-started::before {
+    content: '';
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.legend-completed::before {
+    background: var(--green);
+}
+
+.legend-started::before {
+    background: #f39c12;
+}
+
+.legend-not-started::before {
     background: var(--border-color);
 }
