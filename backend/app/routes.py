@@ -674,9 +674,9 @@ def generate_questions_route(lesson_id):
     # Используем текст первой темы как контекст для генерации
     topic_text = topics[0].content[:500]  # ограничиваем длину
 
-    try:
-        questions = generate_questions(topic_text, lesson.title, count=3)
-        return jsonify({'questions': questions, 'success': True})
-    except Exception as e:
-        logger.error("Ошибка генерации вопросов: %s", e)
-        return jsonify({'error': str(e)}), 500
+    questions = generate_questions(topic_text, lesson.title, count=3)
+    if not questions:
+        logger.error("Не удалось сгенерировать вопросы для урока %d", lesson_id)
+        return jsonify({'error': 'Не удалось сгенерировать вопросы. Попробуйте позже.'}), 500
+
+    return jsonify({'questions': questions, 'success': True})

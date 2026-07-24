@@ -14,25 +14,66 @@ YANDEX_API_KEY = os.getenv('YANDEX_API_KEY')
 YANDEX_FOLDER_ID = os.getenv('YANDEX_FOLDER_ID')
 
 
+def extract_json(text: str):
+    """
+    Пытается извлечь и распарсить JSON из текста, пробуя несколько стратегий.
+    Возвращает распарсенные данные или None.
+    """
+    # 1. Попытка распарсить весь текст как JSON
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # 2. Поиск JSON в markdown-блоках
+    patterns = [
+        r'```json\s*(.*?)\s*```',        # ```json ... ```
+        r'```\s*(.*?)\s*```',            # ``` ... ```
+    ]
+    for pattern in patterns:
+        for match in re.finditer(pattern, text, re.DOTALL):
+            try:
+                return json.loads(match.group(1))
+            except (json.JSONDecodeError, ValueError):
+                continue
+
+    # 3. Поиск JSON-массива: от первой '[' до последней ']'
+    start_arr = text.find('[')
+    end_arr = text.rfind(']')
+    if start_arr != -1 and end_arr != -1 and end_arr > start_arr:
+        candidate = text[start_arr:end_arr + 1]
+        try:
+            return json.loads(candidate)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # 4. Поиск JSON-объекта: от первой '{' до последней '}'
+    start_obj = text.find('{')
+    end_obj = text.rfind('}')
+    if start_obj != -1 and end_obj != -1 and end_obj > start_obj:
+        candidate = text[start_obj:end_obj + 1]
+        try:
+            return json.loads(candidate)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    return None
+
+
 def generate_questions(topic: str, lesson_title: str, count: int = 3) -> list:
     """
     Генерирует дополнительные вопросы по теме урока с помощью YandexGPT.
     Возвращает список вопросов с вариантами ответов и правильным ответом.
+    При любой ошибке возвращает пустой список.
     """
     if not YANDEX_API_KEY or not YANDEX_FOLDER_ID:
-        raise ValueError("YANDEX_API_KEY и YANDEX_FOLDER_ID должны быть установлены в .env")
+        logger.warning("YandexGPT API не настроен — YANDEX_API_KEY или YANDEX_FOLDER_ID отсутствуют")
+        return []
 
-    prompt = f"""
-    Ты — эксперт по информационной безопасности. Сгенерируй {count} дополнительных вопросов для урока «{lesson_title}» по теме «{topic}».
-    Каждый вопрос должен быть в формате JSON:
-    {{
-        "text": "текст вопроса",
-        "options": ["вариант 1", "вариант 2", "вариант 3", "вариант 4"],
-        "correct_answer": 0-3 (индекс правильного ответа),
-        "explanation": "пояснение почему это правильно"
-    }}
-    Верни список из {count} таких объектов в формате JSON. Только JSON, без дополнительного текста.
-    """
+    prompt = f"""Ты — эксперт по информационной безопасности. Сгенерируй ровно {count} дополнительных вопросов для урока «{lesson_title}» по теме «{topic}».
+Каждый вопрос должен быть в формате JSON с полями: text (строка), options (массив из 4 строк), correct_answer (число 0-3 — индекс правильного варианта), explanation (строка с пояснением).
+Верни ТОЛЬКО JSON-массив, без markdown-разметки, без пояснительного текста. Пример:
+[{{"text": "Что такое SQL-инъекция?", "options": ["Атака на БД", "Атака на сеть", "Атака на ОС", "Атака на браузер"], "correct_answer": 0, "explanation": "SQL-инъекция — это внедрение вредоносного SQL-кода в запросы к базе данных."}}]"""
 
     url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
     headers = {
@@ -50,7 +91,7 @@ def generate_questions(topic: str, lesson_title: str, count: int = 3) -> list:
         "messages": [
             {
                 "role": "system",
-                "text": "Ты — эксперт по информационной безопасности, генерируешь вопросы для обучения."
+                "text": "Ты — эксперт по информационной безопасности, генерируешь вопросы для обучения. Твой ответ — строго JSON без лишнего текста."
             },
             {
                 "role": "user",
@@ -64,28 +105,22 @@ def generate_questions(topic: str, lesson_title: str, count: int = 3) -> list:
     response = requests.post(url, headers=headers, json=data)
     if response.status_code != 200:
         logger.error("Ошибка YandexGPT: %s - %s", response.status_code, response.text)
-        raise Exception(f"Ошибка YandexGPT: {response.status_code} - {response.text}")
+        return []
 
     result = response.json()
     answer_text = result['result']['alternatives'][0]['message']['text']
     answer_text = answer_text.strip()
 
     logger.info("YandexGPT ответил успешно, длина ответа: %d символов", len(answer_text))
+    logger.debug("Сырой ответ YandexGPT: %s", answer_text[:1000])
 
-    try:
-        questions = json.loads(answer_text)
-        logger.info("Успешно сгенерировано %d вопросов", len(questions))
+    questions = extract_json(answer_text)
+    if questions is not None:
+        logger.info("Успешно сгенерировано %d вопросов", len(questions) if isinstance(questions, list) else 1)
         return questions
-    except json.JSONDecodeError:
-        logger.warning("JSON не распарсился напрямую, пробую извлечь из markdown-блока")
-        match = re.search(r'```json\s*(.*?)\s*```', answer_text, re.DOTALL)
-        if match:
-            questions = json.loads(match.group(1))
-            logger.info("Успешно извлечено %d вопросов из markdown-блока", len(questions))
-            return questions
-        else:
-            logger.error("Не удалось распарсить JSON от YandexGPT. Ответ: %s", answer_text)
-            raise Exception("Не удалось распарсить JSON от YandexGPT")
+    else:
+        logger.error("Не удалось распарсить JSON от YandexGPT. Ответ (первые 1000 символов): %s", answer_text[:1000])
+        return []
 
 
 def generate_answer(question: str, context: str = "") -> str:
